@@ -1,0 +1,15 @@
+https://itnext.io/production-ready-node-js-rest-apis-setup-using-typescript-postgresql-and-redis-a9525871407
+https://levelup.gitconnected.com/how-to-set-up-a-typescript-node-js-app-in-5-minutes-93ffee3b1768
+brew services start mysql
+mysql.server start
+https://linuxize.com/post/how-to-create-mysql-user-accounts-and-grant-privileges/
+https://electrictoolbox.com/mysql-guid-uuid-default-column/
+
+create table `market_values_dollars` (
+    `uuid` char(36) NULL,
+    `shortid` varchar(10) NOT NULL PRIMARY KEY,
+    `product_name` varchar(30) NOT NULL,
+    `product_price_dollars` double(10, 4) NOT NULL
+);
+
+https://stackoverflow.com/questions/50093144/mysql-8-0-client-does-not-support-authentication-protocol-requested-by-server

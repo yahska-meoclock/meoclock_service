@@ -1,0 +1,6 @@
+yarn add -D typescript
+yarn tsc --init --rootDir src --outDir dist
+yarn add express
+yarn add -D @types/node @types/express nodemon ts-node
+yarn add mysql
+yarn add @types/mysql
