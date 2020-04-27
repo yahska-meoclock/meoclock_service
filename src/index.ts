@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
-import express from 'express';
+require('dotenv').config()
+import express, { Request, Response } from 'express';
 import mySql, { Query } from 'mysql';
-import { getMySqlConnection } from './connections/mysql';
+import { getMySqlConnection } from './connections/sql';
+import ClockRouter from './modules/clock'
 
 const app = express();
-const port = 3002;
+const port = process.env.SERVER_PORT;
 
 class MarketProduct {
     productName: string;
@@ -32,33 +33,7 @@ app.get('/', async (req: Request, res: Response) => {
     
 })
 
-/**
- * Create my new o'clock
- * Properties:
- *  Name:
- *  Deadline:
- *  Sponsors:
- *  Dependents:
- *  Audience:
- *  AntiSponsors:
- */
-app.post('/clock', async(req: Request, res: Response)=>{
-    //TODO
-})
-
-/**
- * PATCH existing o'clock
- */
-app.patch('/clock', async(req: Request, res: Response)=>{
-    //TODO
-})
-
-/**
- * DELETE existing o'clock
- */
-app.delete('/clock', async(req: Request, res: Response)=>{
-    //TODO
-})
+app.use(ClockRouter)
 
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`))

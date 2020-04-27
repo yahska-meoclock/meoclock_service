@@ -8,10 +8,10 @@ export const getMySqlConnection = () => {
         return connection
     } else {
         connection = createConnection({
-            host: 'localhost',
-            user: 'akshay',
-            password: 'qwerty',
-            database:"market"
+            host: process.env.SQL_HOST,
+            user: process.env.SQL_USER,
+            password: process.env.SQL_PASSWORD,
+            database: process.env.SQL_DATABASE
         });
         connection.connect();
     }
