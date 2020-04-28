@@ -1,0 +1,28 @@
+version: "3"
+services:
+    meoclock_mongo:
+        container_name: meoclock_mongo
+        image: mongo
+        volumes:
+            - ./data:/data/nosql_db
+        ports:
+            - 27017:27017
+    meoclock_sql:
+        container_name: meoclock_sql
+        image: mysql
+        command: --default-authentication-plugin=mysql_native_password
+        volumes:
+            - ./data:/data/sql_db
+        environment:
+            MYSQL_USER: akshay
+            MYSQL_ROOT_PASSWORD: qwerty
+        ports:
+            - 3306:3306
+    meoclock_backend:
+        container_name: meoclock_backend
+        restart: always
+        build: .
+        ports:
+            - 3002:3002
+        links:
+            - meoclock_mongo
