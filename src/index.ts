@@ -32,7 +32,7 @@ app.get('/', async (req: Request, res: Response) => {
     //     }))
     //     console.log('The solution is: ', rows[0]);
     // });
-    
+    res.status(200).send("Welcome")
 })
 
 app.use(ClockRouter)
