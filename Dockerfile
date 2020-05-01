@@ -8,4 +8,5 @@ EXPOSE 3002:3002
 
 RUN npm install 
 
-ENTRYPOINT npm run start
+ENTRYPOINT npm run dev
+
