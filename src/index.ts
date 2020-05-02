@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import mySql, { Query } from 'mysql';
 import { getMySqlConnection } from './connections/sql';
 import ClockRouter from './modules/clock'
+import AuthRouter from './modules/sign_in_with_apple'
 // import passport from 'passport';
 // var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
@@ -36,6 +37,6 @@ app.get('/', async (req: Request, res: Response) => {
 })
 
 app.use(ClockRouter)
-
+app.use(AuthRouter)
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`))
