@@ -34,10 +34,10 @@ app.get('/', async (req: Request, res: Response) => {
     //     }))
     //     console.log('The solution is: ', rows[0]);
     // });
-    res.status(200).send("Welcome")
+    res.status(200).sendFile("index.html", {root:"src"})
 })
 
 app.use(ClockRouter)
 app.use(AuthRouter)
-
-app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n ${listEndpoints(app).forEach((e)=>console.log(e))}`))
+app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
+listEndpoints(app).forEach((e)=>console.log(e))

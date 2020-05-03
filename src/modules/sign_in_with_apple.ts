@@ -27,8 +27,8 @@ const getClientSecret = () => {
 }
 
 authRoute.get("/auth/apple", (req: Request, res: Response)=>{
-    res.status(200).send(getClientSecret())
     console.log(getClientSecret())
+    res.status(200).send(getClientSecret())
 })
 
 export default authRoute

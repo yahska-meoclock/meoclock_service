@@ -1,26 +1,7 @@
 import express, { Request, Response } from 'express';
-import { getAll } from '../connections/nosql_crud' 
+import { getAll, post } from '../connections/nosql_crud' 
 
 const clockRoute = express.Router()
-
-class User {
-    name:string = "";
-}
-
-class Clock {
-    name: string = "unnamed";
-    description: string = "";
-    subclocks: [Clock?] = [];
-    deadline: Number = 0;
-    sponsors: [User?] = [];
-    dependents: [User?] = [];
-    dependencies: [User?] = [];
-    audience: [User?] = [];
-    challengers: [User?] = [];
-    supervisors: [User?] = [];
-    expired: Boolean = false;
-    achieved: Boolean = false;
-}
 
 const clocks = [
     "5ea716ce849900bbb269bbd5"
@@ -40,6 +21,7 @@ const clocks = [
  *  Supervisors:
  *  Expired:
  *  Achieved:
+ * {name:"task_1", description:"task description", subclocks:[], deadline:1593561600, sponsors:[], dependents:[], audience:[], challengers:[], supervisors:[], expired:[], achieved:false}
  */
  clockRoute.get('/clock', async (req: Request, res: Response)=>{
      //TODO
@@ -50,7 +32,9 @@ const clocks = [
 clockRoute.post('/clock', async(req: Request, res: Response)=>{
     //TODO
     console.log("Posting Clock")
-    res.status(200).send({test:"abc"})
+    let result = await post("clocks", {name:"task_1", description:"task description", subclocks:[], deadline:1593561600, sponsors:[], dependents:[], dependencies:[], audience:[], challengers:[], supervisors:[], expired:false, achieved:false})
+    console.log("Result ", result)
+    res.status(200).send(result)
 })
 
 /**
