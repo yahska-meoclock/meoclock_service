@@ -5,21 +5,18 @@ import { getMySqlConnection } from './connections/sql';
 import ClockRouter from './modules/clock'
 import AuthRouter from './modules/sign_in_with_apple'
 import listEndpoints from 'express-list-endpoints'
+import bodyParser from 'body-parser'
 // import passport from 'passport';
 // var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
 const app = express();
 const port = process.env.SERVER_PORT;
 
-class MarketProduct {
-    productName: string;
-    productPriceDollars: number;
-
-    constructor(productName: string, productPriceDollars: number){
-        this.productName = productName;
-        this.productPriceDollars = productPriceDollars;
-    }
-}
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+ 
+// parse application/json
+app.use(bodyParser.json())
 
 app.get('/', async (req: Request, res: Response) => {
     //const connection = getMySqlConnection();
