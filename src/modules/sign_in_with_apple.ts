@@ -7,7 +7,7 @@ import querystring from "querystring"
 const authRoute = express.Router()
 
 const getClientSecret = () => {
-    const privateKey = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"");
+    const privateKey = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"", {encoding:"utf8"});
     const headers = {
         kid: process.env.KEY_ID,
         alg: 'ES256'
