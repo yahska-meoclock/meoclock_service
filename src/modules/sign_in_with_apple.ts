@@ -10,35 +10,42 @@ const getClientSecret = () => {
     const privateKey = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"");
     const headers = {
         kid: process.env.KEY_ID,
-        typ: undefined
+        alg: 'ES256'
     }
 
-    const claims = {
+    const payload = {
         iss:process.env.TEAM_ID,
         aud:"https://appleid.apple.com",
         sub:process.env.CLIENT_ID
     }
 
-    const token = jwt.sign(claims, privateKey, {
-        algorithm: 'ES256',
-        header: headers,
-        expiresIn: '24h'
-    })
+    const token = jwt.sign(payload, privateKey, {header: headers})
+    
+    // jwt.sign(payload, privateKey, {
+    //     algorithm: 'ES256',
+    //     header: headers,
+    //     expiresIn: '24h'
+    // })
     console.log(token)
     return token
 }
 
 authRoute.get("/auth/apple", (req: Request, res: Response)=>{
-    console.log(getClientSecret())
-    res.status(200).send(getClientSecret())
+    //console.log(getClientSecret())
+    res.status(200).send("auth apple get ")
+})
+authRoute.post("/auth/apple", (req: Request, res: Response)=>{
+    //console.log(getClientSecret())
+    res.status(200).send("auth apple post")
 })
 
 authRoute.post("/apple/redirect", (req: Request, res: Response)=>{
     const clientSecret = getClientSecret()
+    console.log(req.body)
     const requestBody = {
         grant_type: 'authorization_code',
         code: req.body.code,
-        redirect_uri: "www.meoclocks.com/logged-in",
+        redirect_uri: "www.meoclocks.com/auth/apple",
         client_id: process.env.CLIENT_ID,
         client_secret: clientSecret,
         scope: "name email"
