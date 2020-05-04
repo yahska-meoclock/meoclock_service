@@ -27,7 +27,7 @@ const getClientSecret = (key: string) => {
     const token = JWT.sign({}, privateKey, 
     {
         header:{
-            algorithm:"ES256",
+            alg:"ES256",
             kid:process.env.KEY_ID,
         },
         expiresIn: '1d',  
@@ -63,8 +63,7 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         code: req.body.code,
         redirect_uri: "www.meoclocks.com/auth/apple",
         client_id: process.env.CLIENT_ID,
-        client_secret: clientSecret,
-        scope: "name email"
+        client_secret: clientSecret
     }
 
     axios.request({
