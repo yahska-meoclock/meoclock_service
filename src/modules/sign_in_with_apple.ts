@@ -6,6 +6,9 @@ import querystring from "querystring"
 
 const authRoute = express.Router()
 
+interface AppleAuthKeyCollection {
+    keys: [AppleAuthKey]
+}
 interface AppleAuthKey  {
    kty:string,
    kid:string,
@@ -15,7 +18,7 @@ interface AppleAuthKey  {
    e:string
 }
 interface AxiosAuthKeyResult {
-    keys:[AppleAuthKey]
+    data: AppleAuthKeyCollection
 }
 
 const getClientSecret = (key: string) => {
@@ -51,7 +54,7 @@ authRoute.post("/auth/apple", (req: Request, res: Response)=>{
 authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     const keyResult: AxiosAuthKeyResult = await axios.get("https://appleid.apple.com/auth/keys")
     console.log(keyResult)
-    const key = keyResult.keys[0].n
+    const key = keyResult.data.keys[0].n
     const clientSecret = getClientSecret(key)
     console.log(req.body)
     const requestBody = {
