@@ -6,7 +6,19 @@ import querystring from "querystring"
 
 const authRoute = express.Router()
 
-const getClientSecret = () => {
+interface AppleAuthKey  {
+   kty:string,
+   kid:string,
+   use:string,
+   alg:string,
+   n:string,
+   e:string
+}
+interface AxiosAuthKeyResult {
+    keys:[AppleAuthKey]
+}
+
+const getClientSecret = (key: string) => {
     const privateKey = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"", {encoding:"utf8"});
 
     const token = jwt.sign({
@@ -21,8 +33,8 @@ const getClientSecret = () => {
     })
     const key1 = "iGaLqP6y-SJCCBq5Hv6pGDbG_SQ11MNjH7rWHcCFYz4hGwHC4lcSurTlV8u3avoVNM8jXevG1Iu1SY11qInqUvjJur--hghr1b56OPJu6H1iKulSxGjEIyDP6c5BdE1uwprYyr4IO9th8fOwCPygjLFrh44XEGbDIFeImwvBAGOhmMB2AD1n1KviyNsH0bEB7phQtiLk-ILjv1bORSRl8AK677-1T8isGfHKXGZ_ZGtStDe7Lu0Ihp8zoUt59kx2o9uWpROkzF56ypresiIl4WprClRCjz8x6cPZXU2qNWhu71TQvUFwvIvbkE1oYaJMb0jcOTmBRZA2QuYw-zHLwQ"
     const key2 = "4dGQ7bQK8LgILOdLsYzfZjkEAoQeVC_aqyc8GC6RX7dq_KvRAQAWPvkam8VQv4GK5T4ogklEKEvj5ISBamdDNq1n52TpxQwI2EqxSk7I9fKPKhRt4F8-2yETlYvye-2s6NeWJim0KBtOVrk0gWvEDgd6WOqJl_yt5WBISvILNyVg1qAAM8JeX6dRPosahRVDjA52G2X-Tip84wqwyRpUlq2ybzcLh3zyhCitBOebiRWDQfG26EH9lTlJhll-p_Dg8vAXxJLIJ4SNLcqgFeZe4OfHLgdzMvxXZJnPp_VgmkcpUdRotazKZumj6dBPcXI_XID4Z4Z3OM1KrZPJNdUhxw"
-    console.log(jwt.verify(token, key1))
-    console.log(jwt.verify(token, key2))
+    console.log(jwt.verify(token, key))
+    //console.log(jwt.verify(token, key2))
     console.log(token)
     return token
 }
@@ -36,8 +48,10 @@ authRoute.post("/auth/apple", (req: Request, res: Response)=>{
     res.status(200).send("auth apple post")
 })
 
-authRoute.post("/apple/redirect", (req: Request, res: Response)=>{
-    const clientSecret = getClientSecret()
+authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
+    const keyResult: AxiosAuthKeyResult = await axios.get("https://appleid.apple.com/auth/keys")
+    const key = keyResult.keys[0].n
+    const clientSecret = getClientSecret(key)
     console.log(req.body)
     const requestBody = {
         grant_type: 'authorization_code',
