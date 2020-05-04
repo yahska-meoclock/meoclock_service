@@ -8,18 +8,15 @@ const authRoute = express.Router()
 
 const getClientSecret = () => {
     const privateKey = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"", {encoding:"utf8"});
-    const headers = {
-        kid: process.env.KEY_ID,
-        alg: 'ES256'
-    }
 
-    const payload = {
-        iss:process.env.TEAM_ID,
-        aud:"https://appleid.apple.com",
-        sub:process.env.CLIENT_ID
-    }
-
-    const token = jwt.sign(payload, privateKey, {header: headers})
+    const token = jwt.sign({}, privateKey, {
+        algorithm: 'ES256',  
+        expiresIn: '1d',  
+        audience: 'https://appleid.apple.com',  
+        subject: process.env.CLIENT_ID,  
+        issuer: process.env.TEAM_ID,  
+        keyid: process.env.KEY_ID,
+    })
     
     // jwt.sign(payload, privateKey, {
     //     algorithm: 'ES256',
