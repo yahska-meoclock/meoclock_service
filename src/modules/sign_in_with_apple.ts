@@ -1,5 +1,5 @@
 import fs from 'fs'
-import jwt from 'jsonwebtoken'
+import {JWT} from 'jose'
 import express, { Request, Response } from 'express';
 import axios from "axios"
 import querystring from "querystring"
@@ -24,10 +24,12 @@ interface AxiosAuthKeyResult {
 const getClientSecret = (key: string) => {
     const privateKey = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"", {encoding:"utf8"});
 
-    const token = jwt.sign({}, privateKey, 
+    const token = JWT.sign({}, privateKey, 
     {
-        algorithm:"ES256",
-        keyid:process.env.KEY_ID,
+        header:{
+            algorithm:"ES256",
+            kid:process.env.KEY_ID,
+        },
         expiresIn: '1d',  
         audience: 'https://appleid.apple.com',  
         subject: process.env.CLIENT_ID,  
