@@ -67,9 +67,11 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     };
 
     appleSignin.getAuthorizationToken(req.body.code, options).then((tokenResponse: any) => {
+        console.log("GOT token response")
         appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).then((result:any) => {
+            console.log("Token verified")
             const userAppleId = result.sub;
-            return res.status(200).send(userAppleId)
+            return res.status(200).send(result)
         }).catch((error:any) => {
             // Token is not verified
             return res.status(500).json({
