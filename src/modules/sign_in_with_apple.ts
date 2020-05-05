@@ -59,44 +59,44 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         privateKeyPath: process.env.APPLE_PRIVATE_KEY_FILE, // path to private key associated with your client ID.
         keyIdentifier: process.env.KEY_ID // identifier of the private key.    
     });
-    // const options = {
-    //     clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
-    //     redirectUri: 'https://www.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
-    //     clientSecret: clientSecret
-    // };
+    const options = {
+        clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
+        redirectUri: 'https://www.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
+        clientSecret: clientSecret
+    };
 
-    // appleSignin.getAuthorizationToken(req.body.code, options).then((tokenResponse: any) => {
-    //     console.log(tokenResponse);
-    // }).catch((error: Error) => {
-    //     console.log(Error);
-    // });
-    console.log(req.body)
-    if(!req.body.access_token){
-        const requestBody = {
-            grant_type: 'authorization_code',
-            code: req.body.code,
-            redirect_uri: "www.meoclocks.com/apple/redirect",
-            client_id: process.env.CLIENT_ID,
-            client_secret: clientSecret
-        }
-        console.log(requestBody)
-        axios.request({
-            method: "POST",
-            url: "https://appleid.apple.com/auth/token",
-            data: querystring.stringify(requestBody),
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-           }).then(response => {
-            return res.json({
-             success: true,
-             data: response.data
-            })
-           }).catch(error => {
-            return res.status(500).json({
-             success: false,
-             error: error.response.data
-            })
-        })
-    }
+    appleSignin.getAuthorizationToken(req.body.code, options).then((tokenResponse: any) => {
+        console.log(tokenResponse);
+    }).catch((error: Error) => {
+        console.log(Error);
+    });
+    // console.log(req.body)
+    // if(!req.body.access_token){
+    //     const requestBody = {
+    //         grant_type: 'authorization_code',
+    //         code: req.body.code,
+    //         redirect_uri: "www.meoclocks.com/apple/redirect",
+    //         client_id: process.env.CLIENT_ID,
+    //         client_secret: clientSecret
+    //     }
+    //     console.log(requestBody)
+    //     axios.request({
+    //         method: "POST",
+    //         url: "https://appleid.apple.com/auth/token",
+    //         data: querystring.stringify(requestBody),
+    //         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    //        }).then(response => {
+    //         return res.json({
+    //          success: true,
+    //          data: response.data
+    //         })
+    //        }).catch(error => {
+    //         return res.status(500).json({
+    //          success: false,
+    //          error: error.response.data
+    //         })
+    //     })
+    // }
 })
 
 export default authRoute
