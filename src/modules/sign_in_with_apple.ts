@@ -23,15 +23,21 @@ interface AxiosAuthKeyResult {
 
 const getClientSecret = (key: string) => {
     const privateKey = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"", {encoding:"utf8"});
-
-    const token = jwt.sign({}, privateKey, 
+    const timeNow = Math.floor(Date.now() / 1000);
+    const token = jwt.sign(
+    {
+        issuer: process.env.TEAM_ID,
+        iat: timeNow,
+        exp: timeNow + 15777000,
+        aud: 'https://appleid.apple.com',
+        subject: process.env.CLIENT_ID
+    }, privateKey, 
     {
         algorithm:"ES256",
-        keyid:process.env.KEY_ID,
-        expiresIn: '1d',  
-        audience: 'https://appleid.apple.com',  
-        subject: process.env.CLIENT_ID,  
-        issuer: process.env.TEAM_ID
+        header:{
+            alg:"ES256",
+            kid:process.env.KEY_ID
+        }
     })
 
     const key1 = "iGaLqP6y-SJCCBq5Hv6pGDbG_SQ11MNjH7rWHcCFYz4hGwHC4lcSurTlV8u3avoVNM8jXevG1Iu1SY11qInqUvjJur--hghr1b56OPJu6H1iKulSxGjEIyDP6c5BdE1uwprYyr4IO9th8fOwCPygjLFrh44XEGbDIFeImwvBAGOhmMB2AD1n1KviyNsH0bEB7phQtiLk-ILjv1bORSRl8AK677-1T8isGfHKXGZ_ZGtStDe7Lu0Ihp8zoUt59kx2o9uWpROkzF56ypresiIl4WprClRCjz8x6cPZXU2qNWhu71TQvUFwvIvbkE1oYaJMb0jcOTmBRZA2QuYw-zHLwQ"
