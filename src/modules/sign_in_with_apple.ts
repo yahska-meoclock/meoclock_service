@@ -52,13 +52,13 @@ authRoute.post("/auth/apple", (req: Request, res: Response)=>{
 })
 
 authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
-    //const clientSecret = getClientSecret()
-    const clientSecret = appleSignin.getClientSecret({
-        clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
-        teamId: process.env.TEAM_ID, // Apple Developer Team ID.
-        privateKeyPath: process.env.APPLE_PRIVATE_KEY_FILE, // path to private key associated with your client ID.
-        keyIdentifier: process.env.KEY_ID // identifier of the private key.    
-    });
+    const clientSecret = getClientSecret()
+    // const clientSecret = appleSignin.getClientSecret({
+    //     clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
+    //     teamId: process.env.TEAM_ID, // Apple Developer Team ID.
+    //     privateKeyPath: process.env.APPLE_PRIVATE_KEY_FILE, // path to private key associated with your client ID.
+    //     keyIdentifier: process.env.KEY_ID // identifier of the private key.    
+    // });
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
         redirectUri: 'https://www.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
