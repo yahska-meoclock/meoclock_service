@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@types/body-parser": "^1.19.0",
+    "apple-signin": "^1.0.9",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",
