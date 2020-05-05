@@ -24,23 +24,20 @@ interface AxiosAuthKeyResult {
 }
 
 const getClientSecret = () => {
-    const privateKey = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"", {encoding:"utf8"});
     const timeNow = Math.floor(Date.now() / 1000);
-    const token = jwt.sign(
-    {
-        issuer: process.env.TEAM_ID,
+
+    const claims = {
+        iss: process.env.TEAM_ID,
         iat: timeNow,
         exp: timeNow + 15777000,
-        aud: 'https://appleid.apple.com',
-        sub: process.env.CLIENT_ID
-    }, privateKey, 
-    {
-        algorithm:"ES256",
-        header:{
-            alg:"ES256",
-            kid:process.env.KEY_ID
-        }
-    })
+        aud: "https://appleid.apple.com",
+        sub: process.env.CLIENT_ID,
+    };
+
+    const header = { alg: 'ES256', kid: process.env.CLIENT_ID };
+    const key = fs.readFileSync(process.env.APPLE_PRIVATE_KEY_FILE??"");
+
+    const token = jwt.sign(claims, key, { algorithm: 'ES256', header });
     console.log(token)
     return token
 }
@@ -86,7 +83,7 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         axios.request({
             method: "POST",
             url: "https://appleid.apple.com/auth/token",
-            data: requestBody,
+            data: querystring.stringify(requestBody),
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
            }).then(response => {
             return res.json({
