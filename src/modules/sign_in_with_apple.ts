@@ -74,30 +74,32 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     //     console.log(Error);
     // });
     console.log(req.body)
-    const requestBody = {
-        grant_type: 'authorization_code',
-        code: req.body.code,
-        redirect_uri: "www.meoclocks.com/auth/apple",
-        client_id: process.env.CLIENT_ID,
-        client_secret: clientSecret
+    if(!req.body.access_token){
+        const requestBody = {
+            grant_type: 'authorization_code',
+            code: req.body.code,
+            redirect_uri: "www.meoclocks.com/apple/redirect",
+            client_id: process.env.CLIENT_ID,
+            client_secret: clientSecret
+        }
+        console.log(requestBody)
+        axios.request({
+            method: "POST",
+            url: "https://appleid.apple.com/auth/token",
+            data: requestBody,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+           }).then(response => {
+            return res.json({
+             success: true,
+             data: response.data
+            })
+           }).catch(error => {
+            return res.status(500).json({
+             success: false,
+             error: error.response.data
+            })
+        })
     }
-    console.log(requestBody)
-    axios.request({
-        method: "POST",
-        url: 'https://www.meoclocks.com/apple/redirect',
-        data: requestBody,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-       }).then(response => {
-        return res.json({
-         success: true,
-         data: response.data
-        })
-       }).catch(error => {
-        return res.status(500).json({
-         success: false,
-         error: error.response.data
-        })
-    })
 })
 
 export default authRoute
