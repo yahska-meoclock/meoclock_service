@@ -1,9 +1,5 @@
-import fs from 'fs'
-import jwt from 'jsonwebtoken'
+
 import express, { Request, Response } from 'express';
-import axios from "axios"
-import querystring from "querystring"
-import {AppleAuthKey, AppleAuthKeyCollection, AxiosAuthKeyResult}
 //@ts-ignore
 import appleSignin from "apple-signin"
 

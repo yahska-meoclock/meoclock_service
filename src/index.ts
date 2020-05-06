@@ -4,6 +4,7 @@ import mySql, { Query } from 'mysql';
 import { getMySqlConnection } from './connections/sql';
 import ClockRouter from './modules/clock'
 import AuthRouter from './modules/sign_in_with_apple'
+import GoogleRouter from './modules/sign_in_with_google'
 import listEndpoints from 'express-list-endpoints'
 import bodyParser from 'body-parser'
 // import passport from 'passport';
@@ -36,5 +37,6 @@ app.get('/', async (req: Request, res: Response) => {
 
 app.use(ClockRouter)
 app.use(AuthRouter)
+app.use(GoogleRouter)
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
 listEndpoints(app).forEach((e)=>console.log(e))
