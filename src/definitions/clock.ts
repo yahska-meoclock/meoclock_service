@@ -1,7 +1,5 @@
 
-class User {
-    name:string = "";
-}
+import User from "./user"
 
 export class Clock {
     name: string = "unnamed";

@@ -18,7 +18,7 @@ import { Clock } from "../definitions/clock"
 //     })
 // }
 
-export async function post(entity: string, data: Clock) {
+export async function post(entity: string, data: any) {
     const db = await getNoSqlConnection()
     
     // db.collection('todos').find({}).toArray((err, result)=>{
@@ -47,6 +47,11 @@ export async function getAll(entity: string){
     return result
 }
 
+export async function getSpecific(entity: string, filter: any) {
+    const db = await getNoSqlConnection()
+    const result = await db.collection(entity).find(filter).toArray()
+    return result
+}
 // function deleteTodo(req, res, dbo) {
 //     console.log("req del", req.params.id)
 //     dbo.collection("todos").deleteOne({_id:req.params.id}, (error, result)=>{
@@ -55,3 +60,9 @@ export async function getAll(entity: string){
 //         res.status(200).send()
 //     })
 // }
+
+export default {
+    post,
+    getAll,
+    getSpecific
+}

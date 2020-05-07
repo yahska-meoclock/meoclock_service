@@ -3,7 +3,8 @@
 import passport from 'passport';
 import express, { Request, Response } from 'express';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-
+import CRUD from "../connections/nosql_crud"
+import {User} from "../definitions/user"
 const googleAuth = express.Router()
 
 // Use the GoogleStrategy within Passport.
@@ -15,8 +16,30 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.GOOGLE_CLIENT_SECRET??"",
   callbackURL: "https://www.meoclocks.com/google/redirect"
 },
-function(accessToken: any, refreshToken: any, profile: any, done: any) {
-  console.log(accessToken, refreshToken, profile, done)
+async function(accessToken: any, refreshToken: any, profile: any, done: any) {
+  try {
+    const user = await CRUD.getSpecific("user", {googleEmail: profile.id})
+    if(user) {
+        return done(null, user)
+    } else {
+      const user:User = {
+        username: profile.id,
+        passwordHash: null,
+        firstName: "",
+        lastName: "",
+        googleEmail: null,
+        appleEmail: null,
+        appleAccessToken: null,
+        appleRefreshToken: null,
+        googleAccessToken: accessToken,
+        googleRefreshToken: refreshToken
+      }
+      CRUD.post("user", user)
+      return done(null, user)
+    }
+  } catch (error){
+      return done(error, false)
+  }
 }
 ));
 

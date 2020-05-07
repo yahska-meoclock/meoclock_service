@@ -7,6 +7,8 @@ import AuthRouter from './modules/sign_in_with_apple'
 import GoogleRouter from './modules/sign_in_with_google'
 import listEndpoints from 'express-list-endpoints'
 import bodyParser from 'body-parser'
+import passport from 'passport';
+import { createJWTStrategy } from './modules/jwt-strategy';
 // import passport from 'passport';
 // var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
@@ -18,6 +20,8 @@ app.use(bodyParser.urlencoded({ extended: false }))
  
 // parse application/json
 app.use(bodyParser.json())
+
+passport.use(createJWTStrategy())
 
 app.get('/', async (req: Request, res: Response) => {
     //const connection = getMySqlConnection();
@@ -35,8 +39,10 @@ app.get('/', async (req: Request, res: Response) => {
     res.status(200).sendFile("index.html", {root:"src"})
 })
 
-app.use(ClockRouter)
 app.use(AuthRouter)
 app.use(GoogleRouter)
+app.use(passport.authenticate(["jwt", "google"]))
+app.use(ClockRouter)
+
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
 listEndpoints(app).forEach((e)=>console.log(e))
