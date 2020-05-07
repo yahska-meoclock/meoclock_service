@@ -1,11 +1,10 @@
-import passport from "passport"
 import {Strategy, ExtractJwt, StrategyOptions} from 'passport-jwt'
 import fs from "fs"
 import CRUD from "../connections/nosql_crud"
 
 const opts:StrategyOptions = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: fs.readFileSync(__dirname+"/secrets/private.pem"),
+    secretOrKey: fs.readFileSync(process.env.SECRETS_PATH+"/private.pem"),
     issuer: process.env.JWT_ISSUER,
     audience: process.env.JWT_Audience
 }

@@ -15,7 +15,7 @@ const generateToken = async (subject: string)=>{
         aud: process.env.JWT_AUDIENCE,
         exp: Math.floor(Date.now() / 1000) + 60 * 60
     };
-    const secret = fs.readFileSync(__dirname+"/secrets/private.pem")
+    const secret = fs.readFileSync(process.env.SECRETS_PATH+"/private.pem")
     const token = await jwt.sign(payload, secret)
     return token
 }
