@@ -5,7 +5,7 @@ import {User} from "../definitions/user"
 export const createGoogleAuthStrategy = () => new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID??"",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET??"",
-    callbackURL: "https://www.meoclocks.com/google/redirect"
+    callbackURL: "https://service.meoclocks.com/google/redirect"
   },
   async function(accessToken: any, refreshToken: any, profile: any, done: any) {
     try {
