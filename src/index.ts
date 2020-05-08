@@ -1,5 +1,5 @@
 require('dotenv').config()
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import mySql, { Query } from 'mysql';
 import { getMySqlConnection } from './connections/sql';
 import ClockRouter from './modules/clock'
@@ -10,8 +10,12 @@ import bodyParser from 'body-parser'
 import passport from 'passport';
 import { createJWTStrategy } from './modules/jwt-strategy';
 import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
+import { runInNewContext } from 'vm';
 // import passport from 'passport';
 // var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+
+
+//REFER: https://gist.github.com/joshbirk/1732068
 
 const app = express();
 const port = process.env.SERVER_PORT;
@@ -42,7 +46,15 @@ app.get('/', async (req: Request, res: Response) => {
 
 app.use(AuthRouter)
 app.use(GoogleRouter)
-app.use(passport.authenticate(["jwt", "google"],{session: false}))
+app.use(passport.authenticate('jwt', {session: false}))
+app.use((req: Request, res: Response, next: NextFunction)=> {
+    if(!req.isAuthenticated()){
+        app.use(passport.authenticate("google", {session: false}))
+        return res.redirect('/logged-in')
+    }
+    next()
+})
+
 app.use(ClockRouter)
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
