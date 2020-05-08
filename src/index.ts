@@ -42,7 +42,7 @@ app.get('/', async (req: Request, res: Response) => {
 
 app.use(AuthRouter)
 app.use(GoogleRouter)
-app.use(passport.authenticate(["jwt", "google"]))
+app.use(passport.authenticate(["jwt", "google"],{session: false}))
 app.use(ClockRouter)
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
