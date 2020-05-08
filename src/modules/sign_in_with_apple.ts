@@ -16,7 +16,7 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     console.log(clientSecret)
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
-        redirectUri: 'https://www.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
+        redirectUri: 'https://service.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
         clientSecret: clientSecret
     };
 
