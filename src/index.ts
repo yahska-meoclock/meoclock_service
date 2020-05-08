@@ -9,6 +9,7 @@ import listEndpoints from 'express-list-endpoints'
 import bodyParser from 'body-parser'
 import passport from 'passport';
 import { createJWTStrategy } from './modules/jwt-strategy';
+import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
 // import passport from 'passport';
 // var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
@@ -22,7 +23,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 passport.use(createJWTStrategy())
-
+passport.use(createGoogleAuthStrategy())
 app.get('/', async (req: Request, res: Response) => {
     //const connection = getMySqlConnection();
     // const results = connection?.query('select * from market_values_dollars;', (err, rows)=>{
