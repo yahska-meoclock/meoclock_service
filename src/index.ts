@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
  
 // parse application/json
 app.use(bodyParser.json())
-passport.initialize()
+app.use(passport.initialize())
 passport.use(createJWTStrategy())
 passport.use(createGoogleAuthStrategy())
 app.get('/', async (req: Request, res: Response) => {
