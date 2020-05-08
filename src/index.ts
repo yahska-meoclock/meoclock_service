@@ -44,17 +44,28 @@ app.get('/', async (req: Request, res: Response) => {
     res.status(200).sendFile("index.html", {root:"src"})
 })
 
+app.get("/logged-in", (req: Request, res: Response)=>{
+    res.status(200).json(req.user)
+})
+
+app.get("/errr", (req: Request, res: Response)=>{
+    res.status(500).json("Could not authenticate")
+})
+
 app.use(AuthRouter)
 app.use(GoogleRouter)
 app.use(passport.authenticate('jwt', {session: false}))
 app.use((req: Request, res: Response, next: NextFunction)=> {
     if(!req.isAuthenticated()){
-        app.use(passport.authenticate("google", {session: false}))
-        return res.redirect('/logged-in')
+        app.use(passport.authenticate("google", {
+            scope: ['https://www.googleapis.com/auth/plus.login'],
+            successRedirect:"/logged-in",
+            failureRedirect:"/errr",
+            session: false
+        }))
     }
     next()
 })
-
 app.use(ClockRouter)
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))

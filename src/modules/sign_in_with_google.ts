@@ -6,8 +6,7 @@ import express from 'express';
 const googleAuth = express.Router()
 
 
-googleAuth.get('/google/auth',
-  passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
+//googleAuth.get('/google/auth', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
 
 // GET /auth/google/callback
 //   Use passport.authenticate() as route middleware to authenticate the
@@ -15,9 +14,8 @@ googleAuth.get('/google/auth',
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
 googleAuth.get('/google/redirect', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
   function(req, res) {
-    res.redirect('/');
+    res.json(req.user);
   });
 
 
