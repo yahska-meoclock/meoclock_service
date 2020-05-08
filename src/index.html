@@ -6,7 +6,7 @@
   AppleID.auth.init({
    clientId: 'com.meoclocks.client',
    scope: 'name email',
-   redirectURI: 'https://www.meoclocks.com/apple/redirect'
+   redirectURI: 'https://service.meoclocks.com/apple/redirect'
   });
 const buttonElement = document.getElementById('appleid-signin');
   buttonElement.addEventListener('click', () => {
@@ -15,6 +15,6 @@ const buttonElement = document.getElementById('appleid-signin');
 
   const button = document.getElementById("btn-google")
   button.addEventListener("click", (e)=>{
-    fetch("https://meoclocks.com/google/auth").them(response => console.log(response))
+    fetch("https://service.meoclocks.com/google/auth").them(response => console.log(response))
   })
 </script>
