@@ -42,7 +42,7 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
         return res.status(500).send()
     }
     let token = await generateToken(username)
-    res.cookie("local_auth_token", token, {httpOnly: false, expires: new Date(Date.now()+(1000*60*60*24*2))})
+    res.json({"title": "local_auth_token", "token":token})
 })
 
 localAuth.post("/sign-up", (req: Request, res: Response)=>{
