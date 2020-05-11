@@ -1,30 +1,11 @@
-import jwt from 'jsonwebtoken'
 import express, { Request, Response } from 'express';
-import crypto from "crypto"
 import User from '../definitions/user'
-import fs from "fs"
-import { compileFunction } from 'vm';
 import CRUD from "../connections/nosql_crud"
+import { generateHash, generateToken } from "../utils"
 
 const localAuth = express.Router()
 
-const generateToken = async (subject: string)=>{
-    let payload = {
-        iss: process.env.JWT_ISSUER,
-        sub: subject,
-        aud: process.env.JWT_AUDIENCE,
-        exp: Math.floor(Date.now() / 1000) + 60 * 60
-    };
-    const secret = fs.readFileSync(process.env.SECRETS_PATH+"/private.pem")
-    const token = await jwt.sign(payload, secret)
-    return token
-}
 
-const generateHash = (p: string) => {
-    const hash = crypto.createHash('sha256');
-    hash.update(p);
-    return hash.digest('hex');
-}
 
 localAuth.post("/try-login", async (req: Request, res: Response)=>{
     const {username, password} = req.body
@@ -45,7 +26,7 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
     res.json({"title": "local_auth_token", "token":token})
 })
 
-localAuth.post("/sign-up", (req: Request, res: Response)=>{
+localAuth.post("/signup", (req: Request, res: Response)=>{
     if(!req.body.username || !req.body.password) {
         return res.status(500).send()
     }
@@ -59,7 +40,8 @@ localAuth.post("/sign-up", (req: Request, res: Response)=>{
         appleAccessToken: null,
         googleAccessToken: null,
         appleRefreshToken: null,
-        googleRefreshToken: null
+        googleRefreshToken: null,
+        signupEmail: req.body.signupEmail
     }
     CRUD.post("user", user)
 })

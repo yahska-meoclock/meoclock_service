@@ -10,7 +10,9 @@ import bodyParser from 'body-parser'
 import passport from 'passport';
 import { createJWTStrategy } from './modules/jwt-strategy';
 import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
-import { runInNewContext } from 'vm';
+import User from "./definitions/user"
+import { generateHash } from './utils';
+import CRUD from './connections/nosql_crud';
 // import passport from 'passport';
 // var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 

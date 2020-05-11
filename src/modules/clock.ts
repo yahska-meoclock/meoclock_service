@@ -21,6 +21,7 @@ const clocks = [
  *  Supervisors:
  *  Expired:
  *  Achieved:
+ *  Failed:
  * {name:"task_1", description:"task description", subclocks:[], deadline:1593561600, sponsors:[], dependents:[], audience:[], challengers:[], supervisors:[], expired:[], achieved:false}
  */
  clockRoute.get('/clock', async (req: Request, res: Response)=>{

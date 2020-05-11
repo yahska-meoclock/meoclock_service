@@ -10,6 +10,7 @@ export class User {
     googleRefreshToken:string|null = null
     username:string = ""
     passwordHash:string|null = ""
+    signupEmail:string|null = ""
 }
 
 export default User
