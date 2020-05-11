@@ -27,6 +27,7 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
 })
 
 localAuth.post("/signup", (req: Request, res: Response)=>{
+    console.log("Signing Up")
     try{
         if(!req.body.username || !req.body.password) {
             return res.status(500).send()
@@ -47,6 +48,7 @@ localAuth.post("/signup", (req: Request, res: Response)=>{
         CRUD.post("user", user)
         res.status(200).send(user)
     } catch (e) {
+        console.log(e)
         res.status(500).send()
     }
     

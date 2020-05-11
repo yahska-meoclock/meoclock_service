@@ -11,13 +11,14 @@ import passport from 'passport';
 import { createJWTStrategy } from './modules/jwt-strategy';
 import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
 import localAuth from "./modules/sign_in_with_local"
-
+var cors = require('cors')
 
 //REFER: https://gist.github.com/joshbirk/1732068
 
 const app = express();
 const port = process.env.SERVER_PORT;
 
+app.use(cors())
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
  
