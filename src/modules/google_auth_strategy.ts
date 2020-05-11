@@ -22,6 +22,7 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
           appleEmail: null,
           appleAccessToken: null,
           appleRefreshToken: null,
+          signupEmail: profile.id,
           googleAccessToken: accessToken,
           googleRefreshToken: refreshToken
         }
