@@ -27,23 +27,30 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
 })
 
 localAuth.post("/signup", (req: Request, res: Response)=>{
-    if(!req.body.username || !req.body.password) {
-        return res.status(500).send()
+    try{
+        if(!req.body.username || !req.body.password) {
+            return res.status(500).send()
+        }
+        const user:User = {
+            username: req.body.username,
+            passwordHash: generateHash(req.body.password),
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            googleEmail: null,
+            appleEmail: null,
+            appleAccessToken: null,
+            googleAccessToken: null,
+            appleRefreshToken: null,
+            googleRefreshToken: null,
+            signupEmail: req.body.signupEmail
+        }
+        CRUD.post("user", user)
+        res.status(200).send(user)
+    } catch (e) {
+        res.status(500).send()
     }
-    const user:User = {
-        username: req.body.username,
-        passwordHash: generateHash(req.body.password),
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        googleEmail: null,
-        appleEmail: null,
-        appleAccessToken: null,
-        googleAccessToken: null,
-        appleRefreshToken: null,
-        googleRefreshToken: null,
-        signupEmail: req.body.signupEmail
-    }
-    CRUD.post("user", user)
+    
+
 })
 
 

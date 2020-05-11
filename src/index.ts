@@ -3,18 +3,14 @@ import express, { Request, Response, NextFunction } from 'express';
 import mySql, { Query } from 'mysql';
 import { getMySqlConnection } from './connections/sql';
 import ClockRouter from './modules/clock'
-import AuthRouter from './modules/sign_in_with_apple'
+import AppleAuthRouter from './modules/sign_in_with_apple'
 import GoogleRouter from './modules/sign_in_with_google'
 import listEndpoints from 'express-list-endpoints'
 import bodyParser from 'body-parser'
 import passport from 'passport';
 import { createJWTStrategy } from './modules/jwt-strategy';
 import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
-import User from "./definitions/user"
-import { generateHash } from './utils';
-import CRUD from './connections/nosql_crud';
-// import passport from 'passport';
-// var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+import localAuth from "./modules/sign_in_with_local"
 
 
 //REFER: https://gist.github.com/joshbirk/1732068
@@ -54,7 +50,8 @@ app.get("/errr", (req: Request, res: Response)=>{
     res.status(500).json("Could not authenticate")
 })
 
-app.use(AuthRouter)
+app.use(localAuth)
+app.use(AppleAuthRouter)
 app.use(GoogleRouter)
 app.use(passport.authenticate('jwt', {session: false}))
 app.use((req: Request, res: Response, next: NextFunction)=> {
