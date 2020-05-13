@@ -1,7 +1,5 @@
 require('dotenv').config()
 import express, { Request, Response, NextFunction } from 'express';
-import mySql, { Query } from 'mysql';
-import { getMySqlConnection } from './connections/sql';
 import ClockRouter from './modules/clock'
 import AppleAuthRouter from './modules/sign_in_with_apple'
 import GoogleRouter from './modules/sign_in_with_google'
@@ -28,18 +26,6 @@ app.use(passport.initialize())
 passport.use(createJWTStrategy())
 passport.use(createGoogleAuthStrategy())
 app.get('/', async (req: Request, res: Response) => {
-    //const connection = getMySqlConnection();
-    // const results = connection?.query('select * from market_values_dollars;', (err, rows)=>{
-    //     if(err) {
-    //         res.status(500).send()
-    //     }
-    //     //@ts-ignore
-    //     res.status(201).send(rows.map(r => {
-    //         const marketProduct:MarketProduct = new MarketProduct(r.product_name, r.product_price_dollars);
-    //         return marketProduct;
-    //     }))
-    //     console.log('The solution is: ', rows[0]);
-    // });
     res.status(200).sendFile("index.html", {root:"src"})
 })
 
@@ -66,6 +52,7 @@ app.use((req: Request, res: Response, next: NextFunction)=> {
     }
     next()
 })
+
 app.use(ClockRouter)
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))

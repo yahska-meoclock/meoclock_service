@@ -33,9 +33,28 @@ const clocks = [
 clockRoute.post('/clock', async(req: Request, res: Response)=>{
     //TODO
     console.log("Posting Clock")
-    let result = await post("clocks", {name:"task_1", description:"task description", subclocks:[], deadline:1593561600, sponsors:[], dependents:[], dependencies:[], audience:[], challengers:[], supervisors:[], expired:false, achieved:false})
-    console.log("Result ", result)
-    res.status(200).send(result)
+    if(req.body.clockName && req.body.deadline){
+        let result = await post("clocks", {
+            name:req.body.clockName, 
+            description:req.body.description, 
+            deadline:req.body.deadline, 
+            owner: req.user,
+            sponsors: req.body.sponsors, 
+            dependents: req.body.dependents, 
+            dependencies:req.body.dependencies, 
+            audience:req.body.audience, 
+            challengers:req.body.challengers, 
+            supervisors:req.body.supervisors, 
+            group: req.body.group, 
+            timeline: req.body.timeline, 
+            expired:false, 
+            achieved:false,
+            public: req.body.isPublic
+        })
+        res.status(200).send(result)
+    }else {
+        res.status(500).send()
+    }
 })
 
 /**
