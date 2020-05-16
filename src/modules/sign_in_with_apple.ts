@@ -8,7 +8,7 @@ const authRoute = express.Router()
 authRoute.get("/apple/begin-auth", async (req, res)=>{
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
-        redirectUri: 'https://www.meoclocks.com/apple/redirect',
+        redirectUri: 'https://service.meoclocks.com/apple/redirect',
         state: "123", // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
         scope: "email" // optional, default value is "email".
     };
