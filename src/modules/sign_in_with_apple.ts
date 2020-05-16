@@ -2,13 +2,15 @@
 import express, { Request, Response } from 'express';
 //@ts-ignore
 import appleSignin from "apple-signin"
+import { generateToken } from "../utils"
+import CRUD from "../connections/nosql_crud"
 
-const authRoute = express.Router()
+const appleAuthRoute = express.Router()
 
-authRoute.get("/apple/begin-auth", async (req, res)=>{
+appleAuthRoute.get("/apple/begin-auth", async (req, res)=>{
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
-        redirectUri: 'https://www.meoclocks.com/apple/redirect',
+        redirectUri: 'https://service.meoclocks.com/apple/redirect',
         state: "123", // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
         scope: "email" // optional, default value is "email".
     };
@@ -17,7 +19,7 @@ authRoute.get("/apple/begin-auth", async (req, res)=>{
     res.status(303).json({redirect: authorizationUrl})
 })
 
-authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
+appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     //const clientSecret = getClientSecret()
     const clientSecret = appleSignin.getClientSecret({
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
@@ -28,16 +30,18 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     console.log(clientSecret)
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
-        redirectUri: 'https://www.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
+        redirectUri: 'https://service.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
         clientSecret: clientSecret
     };
 
     appleSignin.getAuthorizationToken(req.body.code, options).then((tokenResponse: any) => {
         console.log("GOT token response")
-        appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).then((result:any) => {
-            console.log("Token verified")
+        appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).then(async (result:any) => {
+
             const userAppleId = result.sub;
-            return res.status(200).send(result)
+            const token = generateToken(result.sub)
+            const temp_token = await CRUD.post("temp_tokens", token)
+            return res.redirect(`www.meoclocks.com/linking/apple/${temp_token}`)
         }).catch((error:any) => {
             // Token is not verified
             return res.status(500).json({
@@ -53,4 +57,11 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     });
 })
 
-export default authRoute
+
+appleAuthRoute.get("/apple/retrieve", async (req: Request, res: Response)=>{
+    const token = CRUD.getSpecific("temp_tokens", {id: req.body.tempToken})
+    //CRUD.deleteSpecific("temp_tokens", {})
+})
+
+
+export default appleAuthRoute
