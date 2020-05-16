@@ -7,7 +7,8 @@ export async function getNoSqlConnection():Promise<any> {
         return db
     }else{
         // Connection URL
-        const url = 'mongodb://meoclock_mongo:27017';
+        //const url = 'mongodb://meoclock_mongo:27017';
+        const url = 'mongodb://localhost:27017';
         // Database Name
         const dbName = 'meoclocks';
         // Create a new MongoClient

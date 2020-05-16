@@ -5,6 +5,18 @@ import appleSignin from "apple-signin"
 
 const authRoute = express.Router()
 
+authRoute.get("/apple/begin-auth", async (req, res)=>{
+    const options = {
+        clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
+        redirectUri: 'https://www.meoclocks.com/apple/redirect',
+        state: "123", // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
+        scope: "email" // optional, default value is "email".
+    };
+     
+    const authorizationUrl = appleSignin.getAuthorizationUrl(options)+"&response_mode=form_post";
+    res.status(303).json({redirect: authorizationUrl})
+})
+
 authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     //const clientSecret = getClientSecret()
     const clientSecret = appleSignin.getClientSecret({
@@ -16,7 +28,7 @@ authRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     console.log(clientSecret)
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
-        redirectUri: 'https://service.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
+        redirectUri: 'https://www.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
         clientSecret: clientSecret
     };
 

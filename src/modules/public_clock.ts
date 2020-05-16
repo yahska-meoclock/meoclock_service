@@ -4,7 +4,7 @@ import { getSpecific } from '../connections/nosql_crud'
 const publicClockRoute = express.Router()
 
 publicClockRoute.get("/public/clocks", async (req: Request, res: Response)=>{
-    let result = await getSpecific("clocks", {public: true})
+    let result = await getSpecific("clocks", {isPublic: true})
      res.status(200).send(result)
 })
 

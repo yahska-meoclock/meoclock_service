@@ -49,7 +49,9 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
             timeline: req.body.timeline, 
             expired:false, 
             achieved:false,
-            public: req.body.isPublic
+            isPublic: req.body.isPublic,
+            bounty: 0,
+            ask: req.body.ask || 0
         })
         res.status(200).send(result)
     }else {

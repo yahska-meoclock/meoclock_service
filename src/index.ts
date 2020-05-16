@@ -10,6 +10,7 @@ import { createJWTStrategy } from './modules/jwt-strategy';
 import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
 import localAuth from "./modules/sign_in_with_local"
 import publicClockRoute from "./modules/public_clock"
+import localAuthMiddleware from "./modules/local_auth_middleware"
 
 var whitelist = ['https://www.meoclocks.com', 'https://meoclocks.com', 'http://localhost:9000', 'http://127.0.0.1:9000']
 var corsOptions = {
@@ -31,6 +32,7 @@ var cors = require('cors')
 //REFER: https://gist.github.com/joshbirk/1732068
 
 const app = express();
+app.enable('strict routing')
 const port = process.env.SERVER_PORT;
 
 app.use(cors())
@@ -42,7 +44,9 @@ app.use(bodyParser.json())
 app.use(passport.initialize())
 passport.use(createJWTStrategy())
 passport.use(createGoogleAuthStrategy())
+
 app.get('/', async (req: Request, res: Response) => {
+    console.log("Sending home")
     res.status(200).sendFile("index.html", {root:"src"})
 })
 
@@ -57,19 +61,9 @@ app.get("/errr", (req: Request, res: Response)=>{
 app.use(publicClockRoute)
 app.use(localAuth)
 app.use(AppleAuthRouter)
-app.use(GoogleRouter)
+// app.use(GoogleRouter)
 app.use(passport.authenticate('jwt', {session: false}))
-app.use((req: Request, res: Response, next: NextFunction)=> {
-    if(!req.isAuthenticated()){
-        app.use(passport.authenticate("google", {
-            scope: ['https://www.googleapis.com/auth/plus.login'],
-            successRedirect:"/logged-in",
-            failureRedirect:"/errr",
-            session: false
-        }))
-    }
-    next()
-})
+app.use(localAuthMiddleware)
 app.use(ClockRouter)
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
