@@ -23,7 +23,10 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
             return res.status(500).send("Password Incorrect")
         }
         let token = await generateToken(username)
-        res.status(200).json({"title": "local_auth_token", "token":token})
+        res.status(200).json({
+            user: {username: user.username},
+            token:token
+        })
     }catch(e){
         console.log(e)
         res.status(500).send(e)
