@@ -12,6 +12,7 @@ import localAuth from "./modules/sign_in_with_local"
 import publicClockRoute from "./modules/public_clock"
 import UserRouter from "./modules/user"
 import localAuthMiddleware from "./modules/local_auth_middleware"
+import WebSocket from "ws";
 
 var whitelist = ['https://www.meoclocks.com', 'https://meoclocks.com', 'http://localhost:9000', 'http://127.0.0.1:9000']
 var corsOptions = {
@@ -67,6 +68,17 @@ app.use(passport.authenticate('jwt', {session: false}))
 app.use(localAuthMiddleware)
 app.use(ClockRouter)
 app.use(UserRouter)
+
+const wss = new WebSocket.Server({port: 3012})
+
+
+wss.on('connection', (ws:WebSocket) => {
+  ws.on('message', (message:string) => {
+    console.log(`Received message => ${message}`)
+  })
+  ws.send('ho!')
+})
+
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
 listEndpoints(app).forEach((e)=>console.log(e))
