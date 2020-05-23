@@ -6,7 +6,7 @@ import express from 'express';
 const googleAuth = express.Router()
 
 
-googleAuth.get('/google/auth', googleAuth.use(passport.authenticate("google", {
+googleAuth.get('/google/begin-auth', googleAuth.use(passport.authenticate("google", {
   scope: ['https://www.googleapis.com/auth/plus.login'],
   successRedirect:"/logged-in",
   failureRedirect:"/errr",

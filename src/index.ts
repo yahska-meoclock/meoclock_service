@@ -2,7 +2,7 @@ require('dotenv').config()
 import express, { Request, Response, NextFunction } from 'express';
 import ClockRouter from './modules/clock'
 import AppleAuthRouter from './modules/sign_in_with_apple'
-import GoogleRouter from './modules/sign_in_with_google'
+import GoogleAuthRouter from './modules/sign_in_with_google'
 import listEndpoints from 'express-list-endpoints'
 import bodyParser from 'body-parser'
 import passport from 'passport';
@@ -62,7 +62,7 @@ app.get("/errr", (req: Request, res: Response)=>{
 app.use(publicClockRoute)
 app.use(localAuth)
 app.use(AppleAuthRouter)
-//app.use(GoogleRouter)
+app.use(GoogleAuthRouter)
 app.use(passport.authenticate('jwt', {session: false}))
 app.use(localAuthMiddleware)
 app.use(ClockRouter)
