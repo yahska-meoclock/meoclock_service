@@ -27,7 +27,6 @@ appleAuthRoute.post("/apple/begin-auth", async (req, res)=>{
 })
 
 appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
-    //const clientSecret = getClientSecret()
     const clientSecret = appleSignin.getClientSecret({
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
         teamId: process.env.TEAM_ID, // Apple Developer Team ID.
@@ -41,26 +40,26 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         clientSecret: clientSecret
     };
 
-    appleSignin.getAuthorizationToken(req.body.code, options).then(async (tokenResponse: any) => {
-        console.log("GOT token response")
-        appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).then(async (result:any) => {
-            const token = await generateToken(result.sub)
-            const userTempId = await redis.hget("authing_user", req.body.state)
-            const secret = CryptoJS.AES.encrypt(token, userTempId!)
-            return res.redirect(`www.meoclocks.com/linking/apple/${secret}`)
-        }).catch((error:any) => {
-            // Token is not verified
-            return res.status(500).json({
-                success: false,
-                error: error
-            })
-        });
-    }).catch((error: Error) => {
+    const tokenResponse = appleSignin.getAuthorizationToken(req.body.code, options).catch((error: Error) => {
+        console.log("Could not get Auth token")
         return res.status(500).json({
             success: false,
             error: error
         })
     });
+
+    const verificationResult = await appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).catch((error:any) => {
+        // Token is not verified
+        console.log("Token not verified")
+        return res.status(500).json({
+            success: false,
+            error: error
+        })
+    })
+    const token = await generateToken(verificationResult.sub)
+    const userTempId = await redis.hget("authing_user", req.body.state)
+    const secret = CryptoJS.AES.encrypt(token, userTempId!)
+    return res.redirect(`www.meoclocks.com/linking/apple/${secret}`)
 })
 
 
