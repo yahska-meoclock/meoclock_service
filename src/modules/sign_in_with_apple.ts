@@ -4,6 +4,7 @@ import express, { Request, Response } from 'express';
 import appleSignin from "apple-signin"
 import shortid from "shortid"
 import CryptoJS from "crypto-js"
+import urlencode from "urlencode"
 import { generateToken } from "../utils"
 import CRUD from "../connections/nosql_crud"
 import redis from "../connections/redis"
@@ -58,8 +59,9 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     })
     const token = await generateToken(verificationResult.sub)
     const userTempId = await redis.hget("authing_user", req.body.state)
-    const secret = CryptoJS.AES.encrypt(token, userTempId!)
-    return res.redirect(`https://www.meoclocks.com/linking/apple/${secret}`)
+    const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
+    const urlSafeSecret = urlencode.encode(secret)
+    return res.redirect(`https://www.meoclocks.com/linking/apple/${urlSafeSecret}`)
 })
 
 

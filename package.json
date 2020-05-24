@@ -36,6 +36,7 @@
     "@types/ioredis": "^4.16.2",
     "@types/passport-jwt": "^3.0.3",
     "@types/shortid": "^0.0.29",
+    "@types/urlencode": "^1.1.2",
     "@types/ws": "^7.2.4",
     "apple-signin": "^1.0.9",
     "axios": "^0.19.2",
@@ -54,6 +55,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.0",
     "shortid": "^2.2.15",
+    "urlencode": "^1.1.0",
     "ws": "^7.3.0"
   }
 }
