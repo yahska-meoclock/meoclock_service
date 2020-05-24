@@ -53,8 +53,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
                     ws.send(JSON.stringify({tempToken: temp_token}))
                 }
             })
-            res.status(200).send()
-            //return res.redirect(`www.meoclocks.com/linking/apple/${temp_token}`)
+            return res.redirect(`www.meoclocks.com/linking/apple/${temp_token}`)
         }).catch((error:any) => {
             // Token is not verified
 
