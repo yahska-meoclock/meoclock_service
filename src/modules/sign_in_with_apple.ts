@@ -2,8 +2,11 @@
 import express, { Request, Response } from 'express';
 //@ts-ignore
 import appleSignin from "apple-signin"
+import shortid from "shortid"
 import { generateToken } from "../utils"
 import CRUD from "../connections/nosql_crud"
+import ws from "../connections/websocket"
+import wss from '../connections/websocket';
 
 const appleAuthRoute = express.Router()
 
@@ -11,10 +14,10 @@ appleAuthRoute.get("/apple/begin-auth", async (req, res)=>{
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
         redirectUri: 'https://service.meoclocks.com/apple/redirect',
-        state: "123", // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
+        state: shortid.generate(), // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
         scope: "email" // optional, default value is "email".
     };
-     
+    
     const authorizationUrl = appleSignin.getAuthorizationUrl(options)+"&response_mode=form_post";
     res.status(303).json({redirect: authorizationUrl})
 })
@@ -41,9 +44,14 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
             const userAppleId = result.sub;
             const token = generateToken(result.sub)
             const temp_token = await CRUD.post("temp_tokens", token)
-            return res.redirect(`www.meoclocks.com/linking/apple/${temp_token}`)
+            wss.clients.forEach((ws)=>{
+                ws.send(`${temp_token}`)
+            })
+            res.status(200).send()
+            //return res.redirect(`www.meoclocks.com/linking/apple/${temp_token}`)
         }).catch((error:any) => {
             // Token is not verified
+
             return res.status(500).json({
                          success: false,
                          error: error

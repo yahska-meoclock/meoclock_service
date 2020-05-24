@@ -33,6 +33,7 @@
   "dependencies": {
     "@types/cors": "^2.8.6",
     "@types/passport-jwt": "^3.0.3",
+    "@types/shortid": "^0.0.29",
     "@types/ws": "^7.2.4",
     "apple-signin": "^1.0.9",
     "axios": "^0.19.2",
@@ -48,6 +49,7 @@
     "passport": "^0.4.1",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.0",
+    "shortid": "^2.2.15",
     "ws": "^7.3.0"
   }
 }
