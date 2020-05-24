@@ -5,16 +5,19 @@ import appleSignin from "apple-signin"
 import shortid from "shortid"
 import { generateToken } from "../utils"
 import CRUD from "../connections/nosql_crud"
-import ws from "../connections/websocket"
+import redis from "../connections/redis"
 import wss from '../connections/websocket';
 
 const appleAuthRoute = express.Router()
 
-appleAuthRoute.get("/apple/begin-auth", async (req, res)=>{
+appleAuthRoute.post("/apple/begin-auth", async (req, res)=>{
+    const authState = shortid.generate()
+    const userTempId = req.body.tempId
+    redis.hset("authing_user", authState, userTempId)
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
         redirectUri: 'https://service.meoclocks.com/apple/redirect',
-        state: shortid.generate(), // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
+        state: authState, // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
         scope: "email" // optional, default value is "email".
     };
     
@@ -37,15 +40,18 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         clientSecret: clientSecret
     };
 
-    appleSignin.getAuthorizationToken(req.body.code, options).then((tokenResponse: any) => {
+    appleSignin.getAuthorizationToken(req.body.code, options).then(async (tokenResponse: any) => {
         console.log("GOT token response")
         appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).then(async (result:any) => {
 
             const userAppleId = result.sub;
             const token = generateToken(result.sub)
             const temp_token = await CRUD.post("temp_tokens", token)
-            wss.clients.forEach((ws)=>{
-                ws.send(`${temp_token}`)
+            const userTempId = await redis.hget("authing_user", req.body.state)
+            wss.clients.forEach((ws: any)=>{
+                if(ws.id == userTempId){
+                    ws.send(JSON.stringify({tempToken: temp_token}))
+                }
             })
             res.status(200).send()
             //return res.redirect(`www.meoclocks.com/linking/apple/${temp_token}`)
