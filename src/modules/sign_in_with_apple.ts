@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 //@ts-ignore
 import appleSignin from "apple-signin"
 import shortid from "shortid"
+import CryptoJS from "crypto-js"
 import { generateToken } from "../utils"
 import CRUD from "../connections/nosql_crud"
 import redis from "../connections/redis"
@@ -33,7 +34,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         privateKeyPath: process.env.APPLE_PRIVATE_KEY_FILE, // path to private key associated with your client ID.
         keyIdentifier: process.env.KEY_ID // identifier of the private key.    
     });
-    console.log(clientSecret)
+
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
         redirectUri: 'https://service.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
@@ -43,30 +44,22 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     appleSignin.getAuthorizationToken(req.body.code, options).then(async (tokenResponse: any) => {
         console.log("GOT token response")
         appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).then(async (result:any) => {
-
-            const userAppleId = result.sub;
-            const token = generateToken(result.sub)
-            const temp_token = await CRUD.post("temp_tokens", token)
+            const token = await generateToken(result.sub)
             const userTempId = await redis.hget("authing_user", req.body.state)
-            wss.clients.forEach((ws: any)=>{
-                if(ws.id == userTempId){
-                    ws.send(JSON.stringify({tempToken: temp_token}))
-                }
-            })
-            return res.redirect(`www.meoclocks.com/linking/apple/${temp_token}`)
+            const secret = CryptoJS.AES.encrypt(token, userTempId!)
+            return res.redirect(`www.meoclocks.com/linking/apple/${secret}`)
         }).catch((error:any) => {
             // Token is not verified
-
             return res.status(500).json({
-                         success: false,
-                         error: error
-                        })
+                success: false,
+                error: error
+            })
         });
     }).catch((error: Error) => {
         return res.status(500).json({
-                     success: false,
-                     error: error
-                    })
+            success: false,
+            error: error
+        })
     });
 })
 
