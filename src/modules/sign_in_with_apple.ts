@@ -15,6 +15,8 @@ const appleAuthRoute = express.Router()
 appleAuthRoute.post("/apple/begin-auth", async (req, res)=>{
     const authState = shortid.generate()
     const userTempId = req.body.tempId
+    console.log("Auth State ", authState)
+    console.log("Temp Id ", userTempId)
     redis.hset("authing_user", authState, userTempId)
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
@@ -59,6 +61,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     })
     const token = await generateToken(verificationResult.sub)
     console.log("Token "+token)
+    console.log("Auth State ", req.body.state)
     const userTempId = await redis.hget("authing_user", req.body.state)
     console.log("User Temp Id "+userTempId)
     const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
