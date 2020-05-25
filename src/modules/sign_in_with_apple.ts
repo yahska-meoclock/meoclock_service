@@ -60,7 +60,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     const token = await generateToken(verificationResult.sub)
     const userTempId = await redis.hget("authing_user", req.body.state)
     const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
-    const urlSafeSecret = urlencode.encode(secret)
+    const urlSafeSecret = urlencode(secret)
     return res.redirect(`https://www.meoclocks.com/linking/apple/${urlSafeSecret}`)
 })
 
