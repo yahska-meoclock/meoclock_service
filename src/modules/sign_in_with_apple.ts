@@ -43,7 +43,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
 
     const tokenResponse = await appleSignin.getAuthorizationToken(req.body.code, options).catch((error: Error) => {
         console.log("Could not get Auth token")
-        return res.status(500).json({
+        res.status(500).json({
             success: false,
             error: error
         })
@@ -52,7 +52,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     const verificationResult = await appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).catch((error:any) => {
         // Token is not verified
         console.log("Token not verified")
-        return res.status(500).json({
+        res.status(500).json({
             success: false,
             error: error
         })
@@ -61,7 +61,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     const userTempId = await redis.hget("authing_user", req.body.state)
     const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
     const urlSafeSecret = urlencode(secret)
-    return res.redirect(`https://www.meoclocks.com/linking/apple/${urlSafeSecret}`)
+    res.redirect(`https://www.meoclocks.com/linking/apple/${urlSafeSecret}`)
 })
 
 
