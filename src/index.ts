@@ -11,6 +11,8 @@ import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
 import localAuth from "./modules/sign_in_with_local"
 import publicClockRoute from "./modules/public_clock"
 import UserRouter from "./modules/user"
+import GroupRouter from "./modules/group"
+import TimelineRouter from "./modules/timeline";
 import localAuthMiddleware from "./modules/local_auth_middleware"
 import wss from "./connections/websocket"
 
@@ -79,6 +81,8 @@ app.use(passport.authenticate('jwt', {session: false}))
 app.use(localAuthMiddleware)
 app.use(ClockRouter)
 app.use(UserRouter)
+app.use(GroupRouter)
+app.use(TimelineRouter)
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
 listEndpoints(app).forEach((e)=>console.log(e))

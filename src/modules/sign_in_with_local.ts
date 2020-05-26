@@ -40,6 +40,7 @@ localAuth.post("/signup", (req: Request, res: Response)=>{
             return res.status(500).send()
         }
         const user:User = {
+            id: null,
             username: req.body.username,
             passwordHash: generateHash(req.body.password),
             firstName: req.body.firstName,

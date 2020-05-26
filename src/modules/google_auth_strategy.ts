@@ -14,6 +14,7 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
           return done(null, user)
       } else {
         const user:User = {
+          id: null,
           username: profile.id,
           passwordHash: null,
           firstName: "",

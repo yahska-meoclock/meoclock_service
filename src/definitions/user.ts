@@ -1,5 +1,6 @@
 
 export class User {
+    id:string|null=""
     firstName:string = ""
     lastName:string = ""
     googleEmail:string|null = null

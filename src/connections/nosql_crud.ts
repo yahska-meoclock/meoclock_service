@@ -20,25 +20,10 @@ import { Clock } from "../definitions/clock"
 
 export async function post(entity: string, data: any) {
     const db = await getNoSqlConnection()
-    
-    // db.collection('todos').find({}).toArray((err, result)=>{
-    //     if(err) throw err;
-    //     const newId = parseInt(Math.random()*1000)+"" + (result.length + 1)
-    //     const todo = {_id: newId, title:req.body.title, isCompleted:req.body.isCompleted||false}
-    //     console.log("Todo ", todo)
     db.collection(entity).insertOne(data, (err:any, result:any)=>{
         if(err) throw err;
-        console.log("Inserted "+result)
-        // dbo.collection("todos").findOne({_id:result.insertedId}, (error, findResult)=>{
-        //     console.log(" Find ", findResult)
-        //     if(findResult){
-        //         const _findResult = transform(findResult)
-        //         res.status(201).send(_findResult)
-        //     }
-        // })
         return result
     })
-    // })
 }
 
 export async function getAll(entity: string){
