@@ -1,4 +1,5 @@
 import { getNoSqlConnection } from './nosql'
+import { ObjectId } from "mongodb"
 import { Clock } from "../definitions/clock"
 
 // function putTodo(req, res, dbo) {
@@ -17,6 +18,17 @@ import { Clock } from "../definitions/clock"
 //         })
 //     })
 // }
+
+
+export async function patch(entity: string, filter: any, patch: any) {
+    const db = await getNoSqlConnection()
+    console.log("Patching ", filter, patch)
+    if(filter._id)
+        filter._id = new ObjectId(filter._id)
+    console.log(entity, filter, patch)
+    const updatedResult = await db.collection(entity).updateOne(filter, {$set: patch})
+    return updatedResult
+}
 
 export async function post(entity: string, data: any) {
     const db = await getNoSqlConnection()
@@ -37,17 +49,26 @@ export async function getSpecific(entity: string, filter: any) {
     const result = await db.collection(entity).find(filter).toArray()
     return result
 }
-// function deleteTodo(req, res, dbo) {
-//     console.log("req del", req.params.id)
-//     dbo.collection("todos").deleteOne({_id:req.params.id}, (error, result)=>{
-//         if (error) throw error;
-//         console.log("count ", result.deletedCount);
-//         res.status(200).send()
-//     })
-// }
+
+export async function deleteEntity(entity: string, filter:any=null) {
+    if (filter) {
+        try {
+            const db = await getNoSqlConnection()
+            console.log("Filter ", filter)
+            if(filter._id)
+                filter._id = new ObjectId(filter._id)
+            const result = await db.collection(entity).deleteOne(filter)
+            return result.deletedCount
+        } catch (e) {
+            throw e
+        }
+    }
+}
 
 export default {
     post,
     getAll,
-    getSpecific
+    patch,
+    getSpecific,
+    deleteEntity,
 }

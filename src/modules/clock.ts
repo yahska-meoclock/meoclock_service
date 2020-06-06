@@ -1,11 +1,7 @@
 import express, { Request, Response } from 'express';
-import { getAll, post } from '../connections/nosql_crud' 
+import nosql_crud, { getAll, post, getSpecific, deleteEntity, patch } from '../connections/nosql_crud' 
 
 const clockRoute = express.Router()
-
-const clocks = [
-    "5eb56e6bc1d63f013e30c456"
-]
 
 /**
  * Get my new o'clock
@@ -24,10 +20,37 @@ const clocks = [
  *  Failed:
  * {name:"task_1", description:"task description", subclocks:[], deadline:1593561600, sponsors:[], dependents:[], audience:[], challengers:[], supervisors:[], expired:[], achieved:false}
  */
- clockRoute.get('/clock', async (req: Request, res: Response)=>{
+ clockRoute.get('/clock/:groupId?', async (req: Request, res: Response)=>{
      //TODO
-     let result = await getAll("clocks")
-     res.status(200).send(result)
+     try {
+        const {groupId} = req.params
+        if(groupId){
+            let result  = await getSpecific("clocks", {group: groupId})
+            res.status(200).send(result)
+        } else {
+           let result = await getAll("clocks")
+           res.status(200).send(result)
+        }
+     } catch(e) {
+        res.status(500).send(e)
+     }
+ })
+
+ /**
+ * DELETE existing o'clock
+ */
+ clockRoute.delete('/clock', async (req: Request, res: Response)=>{
+     if(req.body.id){
+         try {
+             console.log("Deleting clock ", req.body.id)
+            const deleteResult = await deleteEntity("clocks", {_id: req.body.id})
+            res.status(200).send()
+         } catch(e) {
+             console.log(e)
+             res.status(500).send(e)
+         }
+     }
+     return res.status(400).send()
  })
 
 clockRoute.post('/clock', async(req: Request, res: Response)=>{
@@ -49,9 +72,8 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
             timeline: req.body.timeline, 
             expired:false, 
             achieved:false,
-            isPublic: req.body.isPublic,
-            bounty: 0,
-            ask: req.body.ask || 0
+            isPublic: false,
+            asks: req.body.asks || null
         })
         res.status(200).send(result)
     }else {
@@ -64,17 +86,25 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
  */
 clockRoute.patch('/clock', async(req: Request, res: Response)=>{
     //TODO
-    console.log("Patching Clock")
-    res.status(200).send()
+    try {
+        if(req.body.data.filter && req.body.data.patch) {
+            const requestFilter = req.body.data.filter
+            const processedFilter = Object.keys(req.body.data.filter).reduce((acc: any, f, k)=>{
+                if(f=="id") acc["_id"] = requestFilter["id"]
+                else acc[f] = requestFilter[f]
+                return acc
+            },{})
+            let result = await patch("clocks", processedFilter, req.body.data.patch)
+            res.status(200).send(result)
+        }
+        res.status(400).send()
+    }catch(e) {
+        res.status(500).send(e)
+    }
+    
+    
 })
 
-/**
- * DELETE existing o'clock
- */
-clockRoute.delete('/clock', async(req: Request, res: Response)=>{
-    //TODO
-    console.log("Delete Clock")
-    res.status(200).send()
-})
+
 
 export default clockRoute

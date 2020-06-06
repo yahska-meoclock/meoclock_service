@@ -23,7 +23,7 @@ GroupRouter.get("/groups", async (req: Request, res: Response)=>{
             user: req.user!
         })
         const participatedGroups = await CRUD.getSpecific("groups", {
-            selectedUsers: {$elemMatch:{$eq:req.user!}}
+           $or: [{selectedUsers: {$elemMatch:{$eq:req.user!}}}, {user: req.user!}]
         })
         res.status(200).json({owned: groups, participated: participatedGroups})
     } catch(error){
