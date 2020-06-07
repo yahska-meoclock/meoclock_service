@@ -11,7 +11,7 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
     try {
       console.log("Google profile ", profile.id)
       const user = await CRUD.getSpecific("user", {googleEmail: profile.id})
-      if(user) {
+      if(user) { 
           return done(null, user)
       } else {
         const user:User = {

@@ -8,8 +8,6 @@ const googleAuth = express.Router()
 
 googleAuth.get('/google/begin-auth', passport.authenticate("google", {
   scope: ['https://www.googleapis.com/auth/plus.login'],
-  successRedirect:"/logged-in",
-  failureRedirect:"/errr",
   session: false
 }));
 
@@ -18,7 +16,7 @@ googleAuth.get('/google/begin-auth', passport.authenticate("google", {
 //   request.  If authentication fails, the user will be redirected back to the
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
-googleAuth.get('/google/redirect', function(req, res) {
+googleAuth.get('/google/redirect', passport.authenticate("google"), function(req, res) {
     console.log(req.user)
     res.json(req.user);
 });
