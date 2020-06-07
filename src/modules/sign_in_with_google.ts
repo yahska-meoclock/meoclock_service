@@ -53,10 +53,11 @@ googleAuth.get('/google/redirect', async function(req, res) {
   );
   const {code, state} = url.parse(req.url,true).query;
   console.log("State ", state, " Url ", req.query, " Code ", code)
-  const {tokens} = await oauth2Client.getToken(code)
+  const tokenResult = await oauth2Client.getToken(code)
+  const tokens = tokenResult.tokens
   const result = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`)
   const userinfo = result.data
-  console.log("User Info ", userinfo)
+  console.log("User Info ", userinfo, " Token Result ", tokenResult)
   const userTempId = await redis.hget("authing_user_google", state)
   const secret = CryptoJS.AES.encrypt(tokens.access_token, userTempId!).toString()
   const urlSafeSecret = urlencode(secret)
