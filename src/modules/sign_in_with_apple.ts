@@ -19,23 +19,13 @@ const ENDPOINT_URL = 'https://appleid.apple.com';
 const DEFAULT_SCOPE = 'email';
 const TOKEN_ISSUER = 'https://appleid.apple.com';
 
-function parseJwt (token: string) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(Buffer.from(base64, 'base64').toString().split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    return JSON.parse(jsonPayload);
-};
-
 const getApplePublicKey = async (kid: string) => {
     const url = new URL(ENDPOINT_URL);
     url.pathname = '/auth/keys';
-  
+    console.log(" Kid ", kid)
     const result = await Axios.get(url.toString());
     const key = JSON.parse(result.data).keys.filter((pk: any)=>pk.kid==kid)[0];
-  
+    console.log(" Key ", key)
     const pubKey = new NodeRSA();
     pubKey.importKey({ n: Buffer.from(key.n, 'base64'), e: Buffer.from(key.e, 'base64') }, 'components-public');
     return pubKey.exportKey('public');
@@ -43,6 +33,7 @@ const getApplePublicKey = async (kid: string) => {
   
   const verifyIdToken = async (idToken: string, clientID: string, key:string) => {
     const applePublicKey: jwt.Secret = await getApplePublicKey(key);
+    console.log("Apple Key ", applePublicKey)
     const jwtClaims:any = jwt.verify(idToken, applePublicKey, { algorithms: ['RS256'] });
   
     if (jwtClaims.iss !== TOKEN_ISSUER) throw new Error('id token not issued by correct OpenID provider - expected: ' + TOKEN_ISSUER + ' | from: ' + jwtClaims.iss);
@@ -59,7 +50,7 @@ appleAuthRoute.post("/apple/begin-auth", async (req, res)=>{
     console.log("Temp Id ", userTempId)
     redis.hset("authing_user_apple", authState, userTempId)
     const options = {
-        clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
+        clientID: process.env.APPLE_CLIENT_ID, // identifier of Apple Service ID.
         redirectUri: 'https://service.meoclocks.com/apple/redirect',
         state: authState, // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
         scope: "email" // optional, default value is "email".
@@ -71,14 +62,14 @@ appleAuthRoute.post("/apple/begin-auth", async (req, res)=>{
 
 appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     const clientSecret = appleSignin.getClientSecret({
-        clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
-        teamId: process.env.TEAM_ID, // Apple Developer Team ID.
+        clientID: process.env.APPLE_CLIENT_ID, // identifier of Apple Service ID.
+        teamId: process.env.APPLE_TEAM_ID, // Apple Developer Team ID.
         privateKeyPath: process.env.APPLE_PRIVATE_KEY_FILE, // path to private key associated with your client ID.
-        keyIdentifier: process.env.KEY_ID // identifier of the private key.    
+        keyIdentifier: process.env.APPLE_KEY_ID // identifier of the private key.    
     });
 
     const options = {
-        clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
+        clientID: process.env.APPLE_CLIENT_ID, // identifier of Apple Service ID.
         redirectUri: 'https://service.meoclocks.com/apple/redirect', // use the same value which you passed to authorisation URL.
         clientSecret: clientSecret
     };
@@ -93,7 +84,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
     console.log("Token Response "+tokenResponse.id_token)
     const decodedJwt = jwt.decode(tokenResponse.id_token,{json: true, complete: true})
     console.log("Claims ", decodedJwt)
-    const verificationResult = await verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID||"", decodedJwt!.header.kid).catch((error:any) => {
+    const verificationResult = await verifyIdToken(tokenResponse.id_token, process.env.APPLE_CLIENT_ID||"", decodedJwt!.header.kid).catch((error:any) => {
         // Token is not verified
         console.log("Token not verified")
         res.status(500).json({
