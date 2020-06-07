@@ -24,6 +24,7 @@ const getApplePublicKey = async (kid: string) => {
     url.pathname = '/auth/keys';
     console.log(" Kid ", kid)
     const result = await Axios.get(url.toString());
+    console.log("Result ", result)
     const key = JSON.parse(result.data).keys.filter((pk: any)=>pk.kid==kid)[0];
     console.log(" Key ", key)
     const pubKey = new NodeRSA();
