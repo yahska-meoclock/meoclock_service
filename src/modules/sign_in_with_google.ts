@@ -50,8 +50,8 @@ googleAuth.get('/google/redirect', async function(req, res) {
     process.env.GOOGLE_CLIENT_SECRET,
     'https://service.meoclocks.com/google/redirect'
   );
-  const {code, state} = querystring.parse(req.url)
-  console.log("State ", state, " Url ", req.url, " Code ", code, " Parse ", querystring.parse(req.url))
+  const {code, state} = querystring.parse(req.query)
+  console.log("State ", state, " Url ", req.query, " Code ", code, " Parse ", querystring.parse(req.query))
   const {tokens} = await oauth2Client.getToken(code)
   oauth2Client.setCredentials(tokens); 
   const userInfo = await oauth2Client.userinfo.get()
