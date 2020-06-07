@@ -7,7 +7,7 @@ import CryptoJS from "crypto-js"
 import urlencode from "urlencode"
 import shortid from "shortid"
 import redis from "../connections/redis"
-const querystring = require('querystring');
+const url  = require("url")
 
 const googleAuth = express.Router()
 
@@ -50,8 +50,8 @@ googleAuth.get('/google/redirect', async function(req, res) {
     process.env.GOOGLE_CLIENT_SECRET,
     'https://service.meoclocks.com/google/redirect'
   );
-  const {code, state} = querystring.parse(req.query)
-  console.log("State ", state, " Url ", req.query, " Code ", code, " Parse ", querystring.parse(req.query))
+  const {code, state} = url.parse(req.url,true).query;
+  console.log("State ", state, " Url ", req.query, " Code ", code)
   const {tokens} = await oauth2Client.getToken(code)
   oauth2Client.setCredentials(tokens); 
   const userInfo = await oauth2Client.userinfo.get()
