@@ -11,7 +11,7 @@ import redis from "../connections/redis"
 const googleAuth = express.Router()
 
 
-googleAuth.get('/google/begin-auth', (req: Request, res: Response)=>{
+googleAuth.post('/google/begin-auth', (req: Request, res: Response)=>{
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
