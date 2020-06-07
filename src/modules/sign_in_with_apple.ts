@@ -12,6 +12,7 @@ import wss from '../connections/websocket';
 import Axios from 'axios';
 import NodeRSA from 'node-rsa'
 import jwt from 'jsonwebtoken'
+import User from '../definitions/user'
 
 const appleAuthRoute = express.Router()
 
@@ -92,6 +93,23 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
             error: error
         })
     })
+
+    const user:User = {
+        id: null,
+        username: verificationResult.sub,
+        passwordHash: "",
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        googleEmail: null,
+        appleEmail: null,
+        appleAccessToken: null,
+        googleAccessToken: null,
+        appleRefreshToken: null,
+        googleRefreshToken: null,
+        signupEmail: req.body.signupEmail
+    }
+
+    CRUD.post("user", user)
     const token = await generateToken(verificationResult.sub)
     const userTempId = await redis.hget("authing_user_apple", req.body.state)
     const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()

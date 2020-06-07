@@ -14,6 +14,8 @@ import NodeRSA from 'node-rsa'
 import jwt from 'jsonwebtoken'
 import userRouter from './user';
 const {OAuth2Client} = require('google-auth-library');
+import CRUD from "../connections/nosql_crud"
+import User from '../definitions/user'
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 async function verify(token: string) {
@@ -108,6 +110,23 @@ googleAuth.get('/google/redirect', async function(req, res) {
   }
   const result = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`)
   const userinfo = result.data
+  const user:User = {
+    id: null,
+    username: "",
+    passwordHash: "",
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    googleEmail: null,
+    appleEmail: null,
+    appleAccessToken: null,
+    googleAccessToken: tokens.access_token,
+    appleRefreshToken: null,
+    googleRefreshToken: tokens.refresh_token,
+    signupEmail: req.body.signupEmail
+  }
+
+  CRUD.post("user", user)
+
   console.log("User Info ", userinfo, " Token Result ", tokenResult)
   const userTempId = await redis.hget("authing_user_google", state)
   const secret = CryptoJS.AES.encrypt(tokens.access_token, userTempId!).toString()
