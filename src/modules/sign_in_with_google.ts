@@ -17,7 +17,7 @@ googleAuth.get('/google/begin-auth', passport.authenticate("google", {
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
 googleAuth.get('/google/redirect', passport.authenticate("google"), function(req, res) {
-    console.log(req.user)
+    console.log("User ", req.user)
     res.json(req.user);
 });
 
