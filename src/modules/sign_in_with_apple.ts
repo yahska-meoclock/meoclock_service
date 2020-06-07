@@ -9,8 +9,48 @@ import { generateToken } from "../utils"
 import CRUD from "../connections/nosql_crud"
 import redis from "../connections/redis"
 import wss from '../connections/websocket';
+import Axios from 'axios';
+import NodeRSA from 'node-rsa'
+import jwt from 'jsonwebtoken'
 
 const appleAuthRoute = express.Router()
+
+const ENDPOINT_URL = 'https://appleid.apple.com';
+const DEFAULT_SCOPE = 'email';
+const TOKEN_ISSUER = 'https://appleid.apple.com';
+
+function parseJwt (token: string) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+};
+
+const getApplePublicKey = async () => {
+    const url = new URL(ENDPOINT_URL);
+    url.pathname = '/auth/keys';
+  
+    const result = await Axios.get(url.toString());
+    const key = JSON.parse(result.data).keys[0];
+  
+    const pubKey = new NodeRSA();
+    pubKey.importKey({ n: Buffer.from(key.n, 'base64'), e: Buffer.from(key.e, 'base64') }, 'components-public');
+    return pubKey.exportKey('public');
+  };
+  
+  const verifyIdToken = async (idToken: string, clientID: string) => {
+    const applePublicKey: jwt.Secret = await getApplePublicKey();
+    const jwtClaims:any = jwt.verify(idToken, applePublicKey, { algorithms: ['RS256'] });
+  
+    if (jwtClaims.iss !== TOKEN_ISSUER) throw new Error('id token not issued by correct OpenID provider - expected: ' + TOKEN_ISSUER + ' | from: ' + jwtClaims.iss);
+    if (clientID !== undefined && jwtClaims.aud !== clientID) throw new Error('aud parameter does not include this client - is: ' + jwtClaims.aud + '| expected: ' + clientID);
+    if (jwtClaims.exp < (Date.now() / 1000)) throw new Error('id token has expired');
+  
+    return jwtClaims;
+  };
 
 appleAuthRoute.post("/apple/begin-auth", async (req, res)=>{
     const authState = shortid.generate()
@@ -51,7 +91,9 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         })
     });
     console.log("Token Response "+tokenResponse.id_token)
-    const verificationResult = await appleSignin.verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID).catch((error:any) => {
+    const claims = parseJwt(tokenResponse.id_token)
+    console.log("Claims ", claims)
+    const verificationResult = await verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID||"").catch((error:any) => {
         // Token is not verified
         console.log("Token not verified")
         res.status(500).json({
