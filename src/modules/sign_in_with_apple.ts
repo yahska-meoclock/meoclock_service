@@ -17,7 +17,7 @@ appleAuthRoute.post("/apple/begin-auth", async (req, res)=>{
     const userTempId = req.body.tempId
     console.log("Auth State ", authState)
     console.log("Temp Id ", userTempId)
-    redis.hset("authing_user", authState, userTempId)
+    redis.hset("authing_user_apple", authState, userTempId)
     const options = {
         clientID: process.env.CLIENT_ID, // identifier of Apple Service ID.
         redirectUri: 'https://service.meoclocks.com/apple/redirect',
@@ -60,7 +60,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         })
     })
     const token = await generateToken(verificationResult.sub)
-    const userTempId = await redis.hget("authing_user", req.body.state)
+    const userTempId = await redis.hget("authing_user_apple", req.body.state)
     const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
     const urlSafeSecret = urlencode(secret)
     res.redirect(`https://www.meoclocks.com/linking/apple/${urlSafeSecret}`)
