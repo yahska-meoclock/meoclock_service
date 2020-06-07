@@ -13,9 +13,10 @@ userRouter.get("/users/:username?", async (req: Request, res: Response)=>{
     if(req.params.username){
         const users = await CRUD.getSpecific("user", {username:{$regex: `^${req.params.username}`}})
         console.log("Users ", users)
-        res.status(200).json(users.slice(0,5))
+        res.status(200).json(users.slice(0,3))
+    } else {
+        res.status(200).json([])
     }
-    res.status(200).json([])
 })
 
 
