@@ -102,7 +102,7 @@ googleAuth.get('/google/redirect', async function(req, res) {
   try{
     const decodedJwt = jwt.decode(tokens.id_token,{json: true, complete: true})
     const verificationResult = await verify(tokens.id_token)
-    console.log("Verification result ", verificationResult)
+    console.log("Verification result ", verificationResult, "Decoded ", decodedJwt)
   }catch(e) {
     res.status(500).send(e)
   }
