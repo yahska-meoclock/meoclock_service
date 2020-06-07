@@ -9,6 +9,7 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
   },
   async function(accessToken: any, refreshToken: any, profile: any, done: any) {
     try {
+      console.log("Google profile ", profile.id)
       const user = await CRUD.getSpecific("user", {googleEmail: profile.id})
       if(user) {
           return done(null, user)
