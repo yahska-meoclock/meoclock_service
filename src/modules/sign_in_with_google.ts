@@ -9,9 +9,53 @@ import shortid from "shortid"
 import redis from "../connections/redis"
 const url  = require("url")
 import axios from "axios"
+import Axios from 'axios';
+import NodeRSA from 'node-rsa'
+import jwt from 'jsonwebtoken'
+import userRouter from './user';
+const {OAuth2Client} = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+async function verify(token: string) {
+  const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,  // Specify the CLIENT_ID of the app that accesses the backend
+      // Or, if multiple clients access the backend:
+      //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+  });
+  const payload = ticket.getPayload();
+  const userid = payload['sub'];
+  // If request specified a G Suite domain:
+  // const domain = payload['hd'];
+  return userid
+}
 
 const googleAuth = express.Router()
+const PUBLIC_KEY_PATH = "https://www.googleapis.com/oauth2/v3/certs"
+const TOKEN_ISSUER = "accounts.google.com"
 
+const getGooglePublicKey = async (kid: string) => {
+  const url = new URL(PUBLIC_KEY_PATH);
+  console.log(" Kid ", kid)
+  const result = await Axios.get(url.toString());
+  const key = result.data.keys.filter((pk: any)=>pk.kid==kid)[0];
+  console.log(" Key ", key)
+  const pubKey = new NodeRSA();
+  pubKey.importKey({ n: Buffer.from(key.n, 'base64'), e: Buffer.from(key.e, 'base64') }, 'components-public');
+  return pubKey.exportKey('public');
+};
+
+const verifyIdToken = async (idToken: string, clientID: string, key:string) => {
+  const applePublicKey: jwt.Secret = await getGooglePublicKey(key);
+  console.log("Apple Key ", applePublicKey)
+  const jwtClaims:any = jwt.verify(idToken, applePublicKey, { algorithms: ['RS256'] });
+
+  if (jwtClaims.iss !== TOKEN_ISSUER) throw new Error('id token not issued by correct OpenID provider - expected: ' + TOKEN_ISSUER + ' | from: ' + jwtClaims.iss);
+  if (clientID !== undefined && jwtClaims.aud !== clientID) throw new Error('aud parameter does not include this client - is: ' + jwtClaims.aud + '| expected: ' + clientID);
+  if (jwtClaims.exp < (Date.now() / 1000)) throw new Error('id token has expired');
+
+  return jwtClaims;
+};
 
 googleAuth.post('/google/begin-auth', (req: Request, res: Response)=>{
   const oauth2Client = new google.auth.OAuth2(
@@ -55,6 +99,13 @@ googleAuth.get('/google/redirect', async function(req, res) {
   console.log("State ", state, " Url ", req.query, " Code ", code)
   const tokenResult = await oauth2Client.getToken(code)
   const tokens = tokenResult.tokens
+  try{
+    const decodedJwt = jwt.decode(tokens.id_token,{json: true, complete: true})
+    const verificationResult = await verify(tokens.id_token)
+    console.log("Verification result ", verificationResult)
+  }catch(e) {
+    res.status(500).send(e)
+  }
   const result = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`)
   const userinfo = result.data
   console.log("User Info ", userinfo, " Token Result ", tokenResult)
