@@ -29,20 +29,20 @@ function parseJwt (token: string) {
     return JSON.parse(jsonPayload);
 };
 
-const getApplePublicKey = async () => {
+const getApplePublicKey = async (kid: string) => {
     const url = new URL(ENDPOINT_URL);
     url.pathname = '/auth/keys';
   
     const result = await Axios.get(url.toString());
-    const key = JSON.parse(result.data).keys[0];
+    const key = JSON.parse(result.data).keys.filter((pk: any)=>pk.kid==kid)[0];
   
     const pubKey = new NodeRSA();
     pubKey.importKey({ n: Buffer.from(key.n, 'base64'), e: Buffer.from(key.e, 'base64') }, 'components-public');
     return pubKey.exportKey('public');
   };
   
-  const verifyIdToken = async (idToken: string, clientID: string) => {
-    const applePublicKey: jwt.Secret = await getApplePublicKey();
+  const verifyIdToken = async (idToken: string, clientID: string, key:string) => {
+    const applePublicKey: jwt.Secret = await getApplePublicKey(key);
     const jwtClaims:any = jwt.verify(idToken, applePublicKey, { algorithms: ['RS256'] });
   
     if (jwtClaims.iss !== TOKEN_ISSUER) throw new Error('id token not issued by correct OpenID provider - expected: ' + TOKEN_ISSUER + ' | from: ' + jwtClaims.iss);
@@ -91,9 +91,9 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         })
     });
     console.log("Token Response "+tokenResponse.id_token)
-    const claims = parseJwt(tokenResponse.id_token)
-    console.log("Claims ", claims)
-    const verificationResult = await verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID||"").catch((error:any) => {
+    const decodedJwt = jwt.decode(tokenResponse.id_token,{json: true, complete: true})
+    console.log("Claims ", decodedJwt)
+    const verificationResult = await verifyIdToken(tokenResponse.id_token, process.env.CLIENT_ID||"", decodedJwt!.header.kid).catch((error:any) => {
         // Token is not verified
         console.log("Token not verified")
         res.status(500).json({
