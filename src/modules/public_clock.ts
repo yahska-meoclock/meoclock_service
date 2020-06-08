@@ -15,7 +15,7 @@ publicClockRoute.post("/public/clocks", async (req: Request, res: Response)=>{
             name:req.body.clockName, 
             description:req.body.description, 
             deadline:req.body.deadline, 
-            owner: req.user,
+            owner: null,
             sponsors: req.body.sponsors, 
             dependents: req.body.dependents, 
             dependencies:req.body.dependencies, 

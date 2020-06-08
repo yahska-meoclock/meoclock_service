@@ -39,13 +39,46 @@ const clockRoute = express.Router()
  clockRoute.get('/history/clock', async (req: Request, res: Response) => {
      try {
          console.log("Getting history")
-        let result = await getSpecific("clocks", {$or:[{achieved:true}, {expired:true}]})
+        let result = await getSpecific("clocks", {
+            $and:[
+                {
+                   //@ts-ignore
+                   user: req.user!._id
+                },
+                {
+                    $or:[{achieved:true}, {expired:true}]
+                }
+            ]
+        })
         console.log("Result ", result)
         res.status(200).send(result)
      } catch (e) {
         res.status(500).send(e)
      }
  })
+
+ clockRoute.get('/ungrouped/clock', async (req: Request, res: Response) => {
+    try {
+        console.log("Getting ungrouped")
+       let result = await getSpecific("clocks", {
+           $and:[
+               {
+                   //@ts-ignore
+                   user: req.user!._id
+               },
+               {
+                   group:null
+               }
+           ]
+       })
+       console.log("Result ", result)
+       res.status(200).send(result)
+    } catch (e) {
+       res.status(500).send(e)
+    }
+})
+
+
 
  /**
  * DELETE existing o'clock
@@ -66,13 +99,14 @@ const clockRoute = express.Router()
 
 clockRoute.post('/clock', async(req: Request, res: Response)=>{
     //TODO
-    console.log("Posting Clock")
+    console.log("Posting Clock for ", req.user)
     if(req.body.clockName && req.body.deadline){
         let result = await post("clocks", {
             name:req.body.clockName, 
             description:req.body.description, 
             deadline:req.body.deadline, 
-            owner: req.user,
+            //@ts-ignore
+            owner: req.user!._id,
             sponsors: req.body.sponsors, 
             dependents: req.body.dependents, 
             dependencies:req.body.dependencies, 
