@@ -36,6 +36,17 @@ const clockRoute = express.Router()
      }
  })
 
+ clockRoute.get('/history/clock', async (req: Request, res: Response) => {
+     try {
+         console.log("Getting history")
+        let result = await getSpecific("clocks", {$or:[{achieved:true}, {expired:true}]})
+        console.log("Result ", result)
+        res.status(200).send(result)
+     } catch (e) {
+        res.status(500).send(e)
+     }
+ })
+
  /**
  * DELETE existing o'clock
  */

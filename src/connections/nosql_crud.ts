@@ -30,6 +30,13 @@ export async function patch(entity: string, filter: any, patch: any) {
     return updatedResult
 }
 
+export async function expirePatch(entity: string, clocks: any, patch: any) {
+    const db = await getNoSqlConnection()
+    const filter = {_id: {$in: clocks}}
+    const updatedResult = await db.collection(entity).updateOne(filter, {$set: patch})
+    return updatedResult
+}
+
 export async function post(entity: string, data: any) {
     const db = await getNoSqlConnection()
     db.collection(entity).insertOne(data, (err:any, result:any)=>{
@@ -71,4 +78,5 @@ export default {
     patch,
     getSpecific,
     deleteEntity,
+    expirePatch
 }

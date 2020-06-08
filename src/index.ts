@@ -15,6 +15,8 @@ import GroupRouter from "./modules/group"
 import TimelineRouter from "./modules/timeline";
 import localAuthMiddleware from "./modules/local_auth_middleware"
 import wss from "./connections/websocket"
+import schedule from "node-schedule"
+import CRUD from "./connections/nosql_crud"
 
 var whitelist = ['https://www.meoclocks.com', 'https://meoclocks.com', 'http://localhost:9000', 'http://127.0.0.1:9000']
 var corsOptions = {
@@ -83,6 +85,18 @@ app.use(ClockRouter)
 app.use(UserRouter)
 app.use(GroupRouter)
 app.use(TimelineRouter)
+
+schedule.scheduleJob("* * 0 * *", async ()=>{
+  console.log("Executing")
+  const allClocks = await CRUD.getSpecific("clocks", {expired: false})
+  let expiredClocks: any[] = []
+  allClocks.forEach((clock: any)=>{
+    if(clock.deadline > new Date() && !clock.achieved) {
+      expiredClocks.push(clock._id)
+    }
+  })
+  CRUD.expirePatch("clocks", expiredClocks, {expired: true})
+})
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
 listEndpoints(app).forEach((e)=>console.log(e))
