@@ -1,19 +1,22 @@
 
-class User {
-    name:string = "";
-}
+import User from "./user"
 
-export class Clock {
-    name: string = "unnamed";
-    description: string = "";
-    subclocks: [Clock?] = [];
-    deadline: Number = 0;
-    sponsors: [User?] = [];
-    dependents: [User?] = [];
-    dependencies: [User?] = [];
-    audience: [User?] = [];
-    challengers: [User?] = [];
-    supervisors: [User?] = [];
-    expired: Boolean = false;
-    achieved: Boolean = false;
+export interface Clock {
+    name: string;
+    description: string;
+    deadline: string;
+    owner: User;
+    sponsors: [User?];
+    dependents: [User?];
+    dependencies: [User?];
+    audience: [User?];
+    challengers: [User?];
+    supervisors: [User?];
+    group: string;
+    timeline: string;
+    expired: Boolean;
+    achieved: Boolean;
+    isPublic: Boolean;
+    bounty: number;
+    ask: number;
 }

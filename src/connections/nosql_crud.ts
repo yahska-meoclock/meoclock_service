@@ -1,4 +1,5 @@
 import { getNoSqlConnection } from './nosql'
+import { ObjectId } from "mongodb"
 import { Clock } from "../definitions/clock"
 
 // function putTodo(req, res, dbo) {
@@ -18,27 +19,30 @@ import { Clock } from "../definitions/clock"
 //     })
 // }
 
-export async function post(entity: string, data: Clock) {
+
+export async function patch(entity: string, filter: any, patch: any) {
     const db = await getNoSqlConnection()
-    
-    // db.collection('todos').find({}).toArray((err, result)=>{
-    //     if(err) throw err;
-    //     const newId = parseInt(Math.random()*1000)+"" + (result.length + 1)
-    //     const todo = {_id: newId, title:req.body.title, isCompleted:req.body.isCompleted||false}
-    //     console.log("Todo ", todo)
+    console.log("Patching ", filter, patch)
+    if(filter._id)
+        filter._id = new ObjectId(filter._id)
+    console.log(entity, filter, patch)
+    const updatedResult = await db.collection(entity).updateOne(filter, {$set: patch})
+    return updatedResult
+}
+
+export async function expirePatch(entity: string, clocks: any, patch: any) {
+    const db = await getNoSqlConnection()
+    const filter = {_id: {$in: clocks}}
+    const updatedResult = await db.collection(entity).updateOne(filter, {$set: patch})
+    return updatedResult
+}
+
+export async function post(entity: string, data: any) {
+    const db = await getNoSqlConnection()
     db.collection(entity).insertOne(data, (err:any, result:any)=>{
         if(err) throw err;
-        console.log("Inserted "+result)
-        // dbo.collection("todos").findOne({_id:result.insertedId}, (error, findResult)=>{
-        //     console.log(" Find ", findResult)
-        //     if(findResult){
-        //         const _findResult = transform(findResult)
-        //         res.status(201).send(_findResult)
-        //     }
-        // })
         return result
     })
-    // })
 }
 
 export async function getAll(entity: string){
@@ -47,11 +51,32 @@ export async function getAll(entity: string){
     return result
 }
 
-// function deleteTodo(req, res, dbo) {
-//     console.log("req del", req.params.id)
-//     dbo.collection("todos").deleteOne({_id:req.params.id}, (error, result)=>{
-//         if (error) throw error;
-//         console.log("count ", result.deletedCount);
-//         res.status(200).send()
-//     })
-// }
+export async function getSpecific(entity: string, filter: any) {
+    const db = await getNoSqlConnection()
+    const result = await db.collection(entity).find(filter).toArray()
+    return result
+}
+
+export async function deleteEntity(entity: string, filter:any=null) {
+    if (filter) {
+        try {
+            const db = await getNoSqlConnection()
+            console.log("Filter ", filter)
+            if(filter._id)
+                filter._id = new ObjectId(filter._id)
+            const result = await db.collection(entity).deleteOne(filter)
+            return result.deletedCount
+        } catch (e) {
+            throw e
+        }
+    }
+}
+
+export default {
+    post,
+    getAll,
+    patch,
+    getSpecific,
+    deleteEntity,
+    expirePatch
+}
