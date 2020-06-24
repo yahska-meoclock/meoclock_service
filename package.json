@@ -40,6 +40,8 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "@types/stripe": "^7.13.23",
+    "@types/uuidv4": "^5.0.0",
     "apple-signin": "^1.0.9",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
@@ -62,7 +64,9 @@
     "passport-jwt": "^4.0.0",
     "querystring": "^0.2.0",
     "shortid": "^2.2.15",
+    "stripe": "^8.66.0",
     "urlencode": "^1.1.0",
+    "uuidv4": "^6.1.1",
     "ws": "^7.3.0"
   }
 }
