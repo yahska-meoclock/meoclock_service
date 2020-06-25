@@ -14,7 +14,7 @@ stripeRouter.get("/get-stripe-auth-link", async (req: Request, res: Response)=>{
     return res.send({url});
 })
 
-stripeRouter.get("/authorize-oauth", async (req: Request, res: Response)=>{
+stripeRouter.get("/stripe/authorize-oauth", async (req: Request, res: Response)=>{
     const {code, state} = req.query;
 
     stripe.oauth.token({
