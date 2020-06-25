@@ -14,5 +14,24 @@ stripeRouter.get("/get-stripe-auth-link", async (req: Request, res: Response)=>{
     return res.send({url});
 })
 
+stripeRouter.get("/authorize-oauth", async (req: Request, res: Response)=>{
+    const {code, state} = req.query;
+
+    stripe.oauth.token({
+        grant_type: 'authorization_code',
+        code
+    }).then((response: any)=>{
+        const connected_account_id = response.stripe_user_id;
+        console.log("Connected account ", connected_account_id)
+        res.redirect(301, "/profile")
+    }, (err: any) => {
+        if (err.type === 'StripeInvalidGrantError') {
+            return res.status(400).json({error: 'Invalid authorization code: ' + code});
+        } else {
+            return res.status(500).json({error: 'An unknown error occurred.'});
+        }
+    })
+})
+
 export default stripeRouter
 
