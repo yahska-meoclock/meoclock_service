@@ -8,7 +8,7 @@ stripeRouterPublic.get("/stripe/authorize-oauth", async (req: Request, res: Resp
 
     stripe.oauth.token({
         grant_type: 'authorization_code',
-        code
+        code: 'ac_HWpxUhep0Th1fmnl2RfPjtuaRLW7UBzE'
     }).then((response: any)=>{
         const connected_account_id = response.stripe_user_id;
         console.log("Connected account ", connected_account_id)
