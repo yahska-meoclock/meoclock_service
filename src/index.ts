@@ -13,6 +13,7 @@ import publicClockRoute from "./modules/public_clock"
 import UserRouter from "./modules/user"
 import GroupRouter from "./modules/group"
 import TimelineRouter from "./modules/timeline";
+import StripeRouter from "./modules/stripe";
 import localAuthMiddleware from "./modules/local_auth_middleware"
 import wss from "./connections/websocket"
 import schedule from "node-schedule"
@@ -85,6 +86,7 @@ app.use(ClockRouter)
 app.use(UserRouter)
 app.use(GroupRouter)
 app.use(TimelineRouter)
+app.use(StripeRouter)
 
 schedule.scheduleJob("* * 0 * *", async ()=>{
   console.log("Executing")
