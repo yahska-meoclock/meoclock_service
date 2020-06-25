@@ -13,7 +13,8 @@ import publicClockRoute from "./modules/public_clock"
 import UserRouter from "./modules/user"
 import GroupRouter from "./modules/group"
 import TimelineRouter from "./modules/timeline";
-import StripeRouter from "./modules/stripe";
+import StripeRouterPrivate from "./modules/stripe_private";
+import StripeRouterPublic from "./modules/stripe_public";
 import localAuthMiddleware from "./modules/local_auth_middleware"
 import wss from "./connections/websocket"
 import schedule from "node-schedule"
@@ -80,13 +81,15 @@ app.use(publicClockRoute)
 app.use(localAuth)
 app.use(AppleAuthRouter)
 app.use(GoogleAuthRouter)
+app.use(StripeRouterPublic)
 app.use(passport.authenticate('jwt', {session: false}))
 app.use(localAuthMiddleware)
 app.use(ClockRouter)
 app.use(UserRouter)
 app.use(GroupRouter)
 app.use(TimelineRouter)
-app.use(StripeRouter)
+app.use(StripeRouterPrivate)
+
 
 schedule.scheduleJob("* * 0 * *", async ()=>{
   console.log("Executing")
