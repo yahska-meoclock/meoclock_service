@@ -1,9 +1,10 @@
 import axios from "axios"
 
-test("Testing clock api", ()=>{
+test("Testing public clock api", ()=>{
+    const publicClocksEndpoint = "https://service.meoclocks.com/public/clocks"
     try{
-        console.log("157.245.178.52/clock")
-        return axios.get("157.245.178.52/clock").then(data=>{
+        console.log(publicClocksEndpoint)
+        return axios.get(publicClocksEndpoint).then(data=>{
             console.log(data)
             expect(data).not.toBeNull()
         })
