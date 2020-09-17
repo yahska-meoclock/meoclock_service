@@ -33,16 +33,23 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
     }
 })
 
-localAuth.post("/signup", (req: Request, res: Response)=>{
+localAuth.post("/signup", async (req: Request, res: Response)=>{
     console.log("Signing Up")
     try{
         if(!req.body.username || !req.body.password) {
             return res.status(500).send()
         }
+        let existing_user = await CRUD.getSpecific("user", {username: req.body.username})
+        existing_user = existing_user[0]
+        if(existing_user){
+            return res.status(400).send("User alerady exists")
+        }
+        let token = await generateToken(req.body.username)
         const user:User = {
             id: null,
             username: req.body.username,
             passwordHash: generateHash(req.body.password),
+            token: token,
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             googleEmail: null,
@@ -53,8 +60,10 @@ localAuth.post("/signup", (req: Request, res: Response)=>{
             googleRefreshToken: null,
             signupEmail: req.body.signupEmail
         }
+        
         CRUD.post("user", user)
         res.status(200).send(user)
+        return
     } catch (e) {
         console.log(e)
         res.status(500).send()

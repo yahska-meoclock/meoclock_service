@@ -1,9 +1,9 @@
 
-export class User {
+export class PublicUser {
     id:string|null=""
     firstName:string = ""
+    token:string = ""
     lastName:string = ""
-    token:string|null = null
     googleEmail:string|null = null
     appleEmail:string|null = null
     appleAccessToken:string|null = null
@@ -11,9 +11,9 @@ export class User {
     googleAccessToken:string|null = null
     googleRefreshToken:string|null = null
     username:string = ""
-    passwordHash:string|null = ""
-    signupEmail:string|null = ""
+
 }
 
-export default User
+export default PublicUser
+
 

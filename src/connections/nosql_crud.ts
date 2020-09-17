@@ -19,7 +19,11 @@ import { Clock } from "../definitions/clock"
 //     })
 // }
 
-
+export async function get(entity:string, id:string) {
+    const db = await getNoSqlConnection()
+    const result = await db.collection(entity).findOne({_id: new ObjectId(id)})
+    return result
+}
 export async function patch(entity: string, filter: any, patch: any) {
     const db = await getNoSqlConnection()
     console.log("Patching ", filter, patch)
@@ -73,6 +77,7 @@ export async function deleteEntity(entity: string, filter:any=null) {
 }
 
 export default {
+    get,
     post,
     getAll,
     patch,

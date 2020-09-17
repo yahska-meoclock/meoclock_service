@@ -16,6 +16,7 @@ import userRouter from './user';
 const {OAuth2Client} = require('google-auth-library');
 import CRUD from "../connections/nosql_crud"
 import User from '../definitions/user'
+import { generateToken } from "../utils"
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 async function verify(token: string) {
@@ -63,13 +64,16 @@ googleAuth.post('/google/begin-auth', (req: Request, res: Response)=>{
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'https://service.meoclocks.com/google/redirect'
+    process.env.GOOGLE_OAUTH_REDIRECT
   );
   
   const scopes = [
-    'https://www.googleapis.com/auth/plus.login'
+    'https://www.googleapis.com/auth/plus.login',
+    'openid',
+    'profile',
+    'email'
   ];
-
+  //GOOGLE_OAUTH_REDIRECT="https://service.meoclocks.com/google/redirect"
   const authState = shortid.generate()
   const userTempId = req.body.tempId
   console.log("Auth State ", authState)
@@ -95,7 +99,7 @@ googleAuth.get('/google/redirect', async function(req, res) {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'https://service.meoclocks.com/google/redirect'
+    process.env.GOOGLE_OAUTH_REDIRECT
   );
   const {code, state} = url.parse(req.url,true).query;
   console.log("State ", state, " Url ", req.query, " Code ", code)
@@ -112,11 +116,12 @@ googleAuth.get('/google/redirect', async function(req, res) {
   const userinfo = result.data
   const user:User = {
     id: null,
-    username: "",
+    username: userinfo.email,
     passwordHash: "",
+    token: null,
     firstName: req.body.firstName,
     lastName: req.body.lastName,
-    googleEmail: null,
+    googleEmail: userinfo.email,
     appleEmail: null,
     appleAccessToken: null,
     googleAccessToken: tokens.access_token,
@@ -126,12 +131,12 @@ googleAuth.get('/google/redirect', async function(req, res) {
   }
 
   CRUD.post("user", user)
-
+  let token = await generateToken(userinfo.email)
   console.log("User Info ", userinfo, " Token Result ", tokenResult)
   const userTempId = await redis.hget("authing_user_google", state)
-  const secret = CryptoJS.AES.encrypt(tokens.access_token, userTempId!).toString()
+  const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
   const urlSafeSecret = urlencode(secret)
-  res.redirect(`https://www.meoclocks.com/linking/google/${urlSafeSecret}`)
+  res.redirect(`http://localhost:8080/linking/google/${urlSafeSecret}`)
 });
 
 

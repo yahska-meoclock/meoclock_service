@@ -98,6 +98,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         id: null,
         username: verificationResult.sub,
         passwordHash: "",
+        token: null,
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         googleEmail: null,

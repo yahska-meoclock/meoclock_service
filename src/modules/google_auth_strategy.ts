@@ -20,6 +20,7 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
           passwordHash: null,
           firstName: "",
           lastName: "",
+          token: null,
           googleEmail: null,
           appleEmail: null,
           appleAccessToken: null,

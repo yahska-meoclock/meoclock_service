@@ -7,7 +7,7 @@ export const generateToken = async (subject: string)=>{
         iss: process.env.JWT_ISSUER,
         sub: subject,
         aud: process.env.JWT_AUDIENCE,
-        exp: Math.floor(Date.now() / 1000) + 60 * 60
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 2
     };
     const secret = fs.readFileSync(process.env.SECRETS_PATH+"/private.pem")
     const token = await jwt.sign(payload, secret)
