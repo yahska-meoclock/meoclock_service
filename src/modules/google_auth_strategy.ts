@@ -1,4 +1,5 @@
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import shortid from "shortid"
 import CRUD from "../connections/nosql_crud"
 import {User} from "../definitions/user"
 
@@ -10,16 +11,18 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
   async function(accessToken: any, refreshToken: any, profile: any, done: any) {
     try {
       console.log("Google profile ", profile.id)
-      const user = await CRUD.getSpecific("user", {googleEmail: profile.id})
+      const user = await CRUD.getSpecific("users", {googleEmail: profile.id})
       if(user) { 
           return done(null, user)
       } else {
         const user:User = {
           id: null,
+          appId: `u-${shortid.generate()}`,
           username: profile.id,
           passwordHash: null,
           firstName: "",
           lastName: "",
+          token: null,
           googleEmail: null,
           appleEmail: null,
           appleAccessToken: null,
@@ -28,7 +31,7 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
           googleAccessToken: accessToken,
           googleRefreshToken: refreshToken
         }
-        CRUD.post("user", user)
+        CRUD.post("users", user)
         return done(null, user)
       }
     } catch (error){

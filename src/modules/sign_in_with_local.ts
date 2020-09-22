@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import shortid from "shortid"
 import User from '../definitions/user'
 import CRUD from "../connections/nosql_crud"
 import { generateHash, generateToken } from "../utils"
@@ -13,7 +14,7 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
         return res.status(500).send()
     }
     try{
-        let user = await CRUD.getSpecific("user", {username})
+        let user = await CRUD.getSpecific("users", {username})
         user = user[0]
         if(!user){
             return res.status(500).send("User not found")
@@ -33,16 +34,25 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
     }
 })
 
-localAuth.post("/signup", (req: Request, res: Response)=>{
+localAuth.post("/signup", async (req: Request, res: Response)=>{
     console.log("Signing Up")
     try{
         if(!req.body.username || !req.body.password) {
             return res.status(500).send()
         }
+        let existing_user = await CRUD.getSpecific("users", {username: req.body.username})
+        existing_user = existing_user[0]
+        if(existing_user){
+            return res.status(400).send("User alerady exists")
+        }
+        let token = await generateToken(req.body.username)
+        const userAppId = `u-${shortid.generate()}`
         const user:User = {
             id: null,
+            appId: userAppId,
             username: req.body.username,
             passwordHash: generateHash(req.body.password),
+            token: token,
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             googleEmail: null,
@@ -53,8 +63,11 @@ localAuth.post("/signup", (req: Request, res: Response)=>{
             googleRefreshToken: null,
             signupEmail: req.body.signupEmail
         }
-        CRUD.post("user", user)
+        
+        CRUD.post("users", user)
+        CRUD.post("followers", {appId: userAppId, followed: []})
         res.status(200).send(user)
+        return
     } catch (e) {
         console.log(e)
         res.status(500).send()

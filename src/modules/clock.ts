@@ -1,5 +1,9 @@
 import express, { Request, Response } from 'express';
-import nosql_crud, { getAll, post, getSpecific, deleteEntity, patch } from '../connections/nosql_crud' 
+import nosql_crud, { get, getAll, post, getSpecific, deleteEntity, patch } from '../connections/nosql_crud' 
+import schedule from "node-schedule"
+import shortid from "shortid"
+import redis from "../connections/redis"
+import CRUD from '../connections/nosql_crud' 
 
 const clockRoute = express.Router()
 
@@ -57,20 +61,42 @@ const clockRoute = express.Router()
      }
  })
 
- clockRoute.get('/ungrouped/clock', async (req: Request, res: Response) => {
+clockRoute.get('/ungrouped/clock', async (req: Request, res: Response) => {
     try {
         console.log("Getting ungrouped")
+        //@ts-ignore
+        let result = await getSpecific("clocks", {
+            $and:[
+                {
+                    //@ts-ignore
+                    owner: req.user._id
+                },
+                {
+                    group:{$eq: null}
+                }
+            ]
+        })
+        console.log("Result ", result)
+        res.status(200).send(result)
+    } catch (e) {
+       res.status(500).send(e)
+    }
+})
+
+clockRoute.get("/grouped/clock", async (req: Request, res: Response)=>{
+    try {
        let result = await getSpecific("clocks", {
            $and:[
                {
                    //@ts-ignore
-                   user: req.user!._id
+                   owner: req.user!._id
                },
                {
-                   group:null
+                   group:{$ne: null}
                }
            ]
        })
+
        console.log("Result ", result)
        res.status(200).send(result)
     } catch (e) {
@@ -84,10 +110,10 @@ const clockRoute = express.Router()
  * DELETE existing o'clock
  */
  clockRoute.delete('/clock', async (req: Request, res: Response)=>{
-     if(req.body.id){
+     if(req.body.appId){
          try {
-             console.log("Deleting clock ", req.body.id)
-            const deleteResult = await deleteEntity("clocks", {_id: req.body.id})
+            const deleteResult = await deleteEntity("clocks", {appId: req.body.appId})
+            redis.hdel("clock_expiry_jobs", req.body.appId)
             res.status(200).send()
          } catch(e) {
              console.log(e)
@@ -101,10 +127,12 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
     //TODO
     console.log("Posting Clock for ", req.user)
     if(req.body.clockName && req.body.deadline){
+        const appId = `c-${shortid.generate()}`
         let result = await post("clocks", {
             name:req.body.clockName, 
             description:req.body.description, 
             deadline:req.body.deadline, 
+            appId: appId,
             //@ts-ignore
             owner: req.user!._id,
             sponsors: req.body.sponsors, 
@@ -118,8 +146,15 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
             expired:false, 
             achieved:false,
             isPublic: false,
-            asks: req.body.asks || null
+            asks: req.body.asks || null,
+            created: (new Date()).toISOString()
         })
+        const job: any = schedule.scheduleJob(new Date(req.body.deadline), async function(appId: string){
+            console.log("Clock expired")
+            //@ts-ignore
+            await patch("clocks", {appId: appId, achieved: false}, {expired: true})
+        }.bind(null, appId))
+        redis.hset("clock_expiry_jobs", appId, job)
         res.status(200).send(result)
     }else {
         res.status(500).send()
@@ -150,6 +185,42 @@ clockRoute.patch('/clock', async(req: Request, res: Response)=>{
     
 })
 
+/**
+ * Achieve clock
+ */
+clockRoute.patch("/clock/achieve", async (req: Request, res: Response)=>{
+    try {
+        if(req.body.appId){
+            let result = await patch("clocks", {appId:req.body.appId}, {achieved: true})
+            res.status(200).send(result)
+            const job = await redis.hget("clock_expiry_jobs", req.body.appId)
+            //@ts-ignore
+            if(job) job.cancel()
+            redis.hdel("clock_expiry_jobs", req.body.appId)
+        }else{
+            res.status(400).send("")
+        }
+    }catch(e) {
+        res.status(500).send(e)
+    }
+})
+
+/**
+ * Get specific clock with clock id
+ */
+clockRoute.get("/clock/:clockId", async (req: Request, res: Response) => {
+    try {
+        const { clockId } = req.params;
+        const clock = await CRUD.appGet("clocks", clockId)
+        if(clock){
+            return res.json(clock).sendStatus(200)
+        } else {
+            return res.sendStatus(404)
+        }
+    } catch(e) {
+        res.status(500).send(e)
+    }
+})
 
 
 export default clockRoute

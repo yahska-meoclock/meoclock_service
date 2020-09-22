@@ -16,6 +16,7 @@ import TimelineRouter from "./modules/timeline";
 import StripeRouterPrivate from "./modules/stripe_private";
 import StripeRouterPublic from "./modules/stripe_public";
 import localAuthMiddleware from "./modules/local_auth_middleware"
+import FollowerRoute from "./modules/followers"
 import wss from "./connections/websocket"
 import schedule from "node-schedule"
 import CRUD from "./connections/nosql_crud"
@@ -89,7 +90,7 @@ app.use(UserRouter)
 app.use(GroupRouter)
 app.use(TimelineRouter)
 app.use(StripeRouterPrivate)
-
+app.use(FollowerRoute)
 
 schedule.scheduleJob("* * 0 * *", async ()=>{
   console.log("Executing")

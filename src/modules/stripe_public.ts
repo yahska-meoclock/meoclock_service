@@ -14,7 +14,7 @@ stripeRouterPublic.get("/stripe/authorize-oauth", async (req: Request, res: Resp
         const connected_account_id = response.stripe_user_id;
         console.log("Connected account ", connected_account_id)
         console.log("Response ", response)
-        res.redirect(301, "https://www.meoclocks.com/profile")
+        res.redirect(301, "https://localhost:8080/profile")
     }, (err: any) => {
         if (err.type === 'StripeInvalidGrantError') {
             return res.status(400).json({error: 'Invalid authorization code: ' + code});
@@ -22,6 +22,14 @@ stripeRouterPublic.get("/stripe/authorize-oauth", async (req: Request, res: Resp
             return res.status(500).json({error: 'An unknown error occurred.'});
         }
     })
+})
+
+stripeRouterPublic.get("/stripe/reauth", async (req: Request, res: Response)=> {
+    res.redirect("http://localhost:8080/profile")
+})
+
+stripeRouterPublic.get("/stripe/return", async (req: Request, res: Response)=> {
+    res.redirect("http://localhost:8080/profile")
 })
 
 export default stripeRouterPublic

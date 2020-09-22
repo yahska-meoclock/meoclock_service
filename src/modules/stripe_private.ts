@@ -1,6 +1,17 @@
 import express, { Request, Response } from 'express';
 import { uuid } from 'uuidv4'
 import redis from "../connections/redis"
+import nosql_crud, { appGet, get, getAll, post, getSpecific, deleteEntity, patch } from '../connections/nosql_crud' 
+const stripe = require('stripe')('sk_test_FWOmLs9sKd65HmDQ4tKrUFzr');
+
+// const paymentIntent = await stripe.paymentIntents.create({
+//     payment_method_types: ['card'],
+//     amount: 1000,
+//     currency: 'usd',
+//   }, {
+//     stripeAccount: '{{CONNECTED_STRIPE_ACCOUNT_ID}}',
+// });
+
 const stripeRouterPrivate = express.Router()
 
 /*
@@ -14,11 +25,63 @@ stripeRouterPrivate.get("/get-stripe-auth-link", async (req: Request, res: Respo
     //@ts-ignore
     redis.hset("authing_stripe", state, req.user!._id)
     //@ts-ignore
-    const args = new URLSearchParams({state, client_id: process.env.STRIPE_CLIENT_ID})
+    const args = new URLSearchParams({state, client_id: process.env.STRIPE_CLIENT_ID, redirect_uri:"https://db20e3ec0352.ngrok.io/stripe/authorize-oauth"})
     const url = `https://connect.stripe.com/express/oauth/authorize?${args.toString()}`;
     return res.send({url});
 })
 
+
+stripeRouterPrivate.post("/account/express", async (req: Request, res: Response)=>{
+    try {
+        const account = await stripe.accounts.create({
+            type: 'express',
+            capabilities:{
+                transfers: {requested: true},
+                card_payments: {requested: true}
+            }
+        });
+
+        //@ts-ignore
+        post("stripe", {...account, userId: req.user!.appId})
+    } catch (e) {
+        return res.status(500).send(e)
+    }
+})
+
+stripeRouterPrivate.get("/account/links", async (req: Request, res: Response)=>{
+    try {
+        //@ts-ignore
+        const account: any = await appGet("stripe", req.user!.appId)
+        if(account){
+            const accountLinks = await stripe.accountLinks.create({
+                account: account.id,
+                refresh_url: 'https://db20e3ec0352.ngrok.io/stripe/reauth',
+                return_url: 'https://db20e3ec0352.ngrok.io/stripe/return',
+                type: 'account_onboarding',
+            });
+
+            res.status(200).send(accountLinks.url)
+        }
+    } catch (e) {
+        return res.status(500).send(e)
+    }
+})
+
+stripeRouterPrivate.post("stripe/payment", async (req: Request, res: Response) => {
+    try {
+        const paymentIntent = await stripe.paymentIntents.create({
+            payment_method_types: ['card'],
+            amount: 1000,
+            currency: 'usd',
+            application_fee_amount: 123,
+            transfer_data: {
+              destination: '{{CONNECTED_STRIPE_ACCOUNT_ID}}',
+            },
+        });
+    } catch (e) {
+        return res.status(500).send(e)
+    }
+})
 
 
 export default stripeRouterPrivate
