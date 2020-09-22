@@ -10,7 +10,7 @@ export async function getNoSqlConnection():Promise<any> {
         //const url = 'mongodb://meoclock_mongo:27017';
         const url = 'mongodb://127.0.0.1:27017';
         // Database Name
-        const dbName = 'meoclock';
+        const dbName = 'meoclocks';
         // Create a new MongoClient
         let dbo = await MongoClient.connect(url, { useNewUrlParser: true })
         db = dbo.db(dbName)

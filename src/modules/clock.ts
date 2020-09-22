@@ -3,6 +3,7 @@ import nosql_crud, { get, getAll, post, getSpecific, deleteEntity, patch } from 
 import schedule from "node-schedule"
 import shortid from "shortid"
 import redis from "../connections/redis"
+import CRUD from '../connections/nosql_crud' 
 
 const clockRoute = express.Router()
 
@@ -203,5 +204,23 @@ clockRoute.patch("/clock/achieve", async (req: Request, res: Response)=>{
         res.status(500).send(e)
     }
 })
+
+/**
+ * Get specific clock with clock id
+ */
+clockRoute.get("/clock/:clockId", async (req: Request, res: Response) => {
+    try {
+        const { clockId } = req.params;
+        const clock = await CRUD.appGet("clocks", clockId)
+        if(clock){
+            return res.json(clock).sendStatus(200)
+        } else {
+            return res.sendStatus(404)
+        }
+    } catch(e) {
+        res.status(500).send(e)
+    }
+})
+
 
 export default clockRoute

@@ -116,6 +116,7 @@ googleAuth.get('/google/redirect', async function(req, res) {
   const userinfo = result.data
   const user:User = {
     id: null,
+    appId: `u-${shortid.generate()}`,
     username: userinfo.email,
     passwordHash: "",
     token: null,
@@ -130,7 +131,7 @@ googleAuth.get('/google/redirect', async function(req, res) {
     signupEmail: req.body.signupEmail
   }
 
-  CRUD.post("user", user)
+  CRUD.post("users", user)
   let token = await generateToken(userinfo.email)
   console.log("User Info ", userinfo, " Token Result ", tokenResult)
   const userTempId = await redis.hget("authing_user_google", state)

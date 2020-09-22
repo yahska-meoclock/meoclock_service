@@ -1,6 +1,7 @@
 
 export class User {
     id:string|null=""
+    appId:string=""
     firstName:string = ""
     lastName:string = ""
     token:string|null = null

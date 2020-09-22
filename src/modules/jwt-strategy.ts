@@ -12,7 +12,7 @@ const opts:StrategyOptions = {
 
 const createJWTStrategy = () => new Strategy(opts, async function(jwt_payload, done) {
     try {
-        let user = await CRUD.getSpecific("user", {username: jwt_payload.sub})
+        let user = await CRUD.getSpecific("users", {username: jwt_payload.sub})
         user = user[0]
         if(user) {
             return done(null, user)

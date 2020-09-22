@@ -96,6 +96,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
 
     const user:User = {
         id: null,
+        appId: `u-${shortid.generate()}`,
         username: verificationResult.sub,
         passwordHash: "",
         token: null,
@@ -110,7 +111,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         signupEmail: req.body.signupEmail
     }
 
-    CRUD.post("user", user)
+    CRUD.post("users", user)
     const token = await generateToken(verificationResult.sub)
     const userTempId = await redis.hget("authing_user_apple", req.body.state)
     const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
