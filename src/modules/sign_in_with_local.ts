@@ -3,9 +3,22 @@ import shortid from "shortid"
 import User from '../definitions/user'
 import CRUD from "../connections/nosql_crud"
 import { generateHash, generateToken } from "../utils"
+import {Storage} from "@google-cloud/storage";
+import Multer from "multer";
+const {format} = require('util');
+
+//@ts-ignore
+const storage = new Storage({keyFileName: process.env.GOOGLE_APPLICATION_CREDENTIALS})
+const multer = Multer({
+    storage: Multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // no larger than 5mb, you can change as needed.
+    },
+});
 
 const localAuth = express.Router()
-
+//@ts-ignore
+const bucket = storage.bucket(process.env.PROFILE_PICTURES_BUCKET)
 
 
 localAuth.post("/try-login", async (req: Request, res: Response)=>{
@@ -34,7 +47,7 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
     }
 })
 
-localAuth.post("/signup", async (req: Request, res: Response)=>{
+localAuth.post("/signup", multer.single('file'), async (req: Request, res: Response)=>{
     console.log("Signing Up")
     try{
         if(!req.body.username || !req.body.password) {
@@ -61,9 +74,30 @@ localAuth.post("/signup", async (req: Request, res: Response)=>{
             googleAccessToken: null,
             appleRefreshToken: null,
             googleRefreshToken: null,
-            signupEmail: req.body.signupEmail
+            signupEmail: req.body.signupEmail,
+            pictureUrl: null
         }
+
+        if(req.file){
+            const blob = bucket.file(req.file.originalname)
+            const blobStream = blob.createWriteStream({
+                resumable: false,
+            });
+            
+            blobStream.on('error', (err: any) => {
+                console.log("Error occurred ", err)
+            });
         
+            blobStream.on('finish', () => {
+                // The public URL can be used to directly access the file via HTTP.
+                const publicUrl = format(
+                    `https://storage.googleapis.com/${bucket.name}/${blob.name}`
+                );
+                user.pictureUrl=publicUrl
+            });
+            blobStream.end(req.file.buffer);
+        }
+
         CRUD.post("users", user)
         CRUD.post("followers", {appId: userAppId, followed: []})
         res.status(200).send(user)
