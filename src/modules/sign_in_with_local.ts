@@ -60,6 +60,8 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
         }
         let token = await generateToken(req.body.username)
         const userAppId = `u-${shortid.generate()}`
+        const blobName = `pp-${userAppId}-${req.file.originalname}`
+        const cloudFileName = `https://storage.googleapis.com/${bucket.name}/${blobName}`
         const user:User = {
             id: null,
             appId: userAppId,
@@ -75,11 +77,11 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             appleRefreshToken: null,
             googleRefreshToken: null,
             signupEmail: req.body.signupEmail,
-            pictureUrl: null
+            pictureUrl: cloudFileName
         }
 
         if(req.file){
-            const blob = bucket.file(req.file.originalname)
+            const blob = bucket.file(blobName)
             const blobStream = blob.createWriteStream({
                 resumable: false,
             });
@@ -91,7 +93,7 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             blobStream.on('finish', () => {
                 // The public URL can be used to directly access the file via HTTP.
                 const publicUrl = format(
-                    `https://storage.googleapis.com/${bucket.name}/${blob.name}`
+                    cloudFileName
                 );
                 user.pictureUrl=publicUrl
             });
