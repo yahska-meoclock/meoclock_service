@@ -129,7 +129,8 @@ googleAuth.get('/google/redirect', async function(req, res) {
     appleRefreshToken: null,
     googleRefreshToken: tokens.refresh_token,
     signupEmail: req.body.signupEmail,
-    pictureUrl: null
+    pictureUrl: null,
+    active: true
   }
 
   CRUD.post("users", user)

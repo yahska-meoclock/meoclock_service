@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import shortid from "shortid"
+import redis from "../connections/redis"
 import User from '../definitions/user'
-import CRUD from "../connections/nosql_crud"
+import CRUD, { patch } from "../connections/nosql_crud"
 import { generateHash, generateToken } from "../utils"
 import {Storage} from "@google-cloud/storage";
 import Multer from "multer";
@@ -77,7 +78,8 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             appleRefreshToken: null,
             googleRefreshToken: null,
             signupEmail: req.body.signupEmail,
-            pictureUrl: cloudFileName
+            pictureUrl: cloudFileName,
+            active: false
         }
 
         if(req.file){
@@ -99,7 +101,13 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             });
             blobStream.end(req.file.buffer);
         }
-
+        try {
+            const message = await sendVerificationEmail("s.yahska@gmail.com", userAppId)
+            console.log("Message sent ", message)
+        } catch(e) {
+            console.log("Message not sent ", e)
+        }
+        
         CRUD.post("users", user)
         CRUD.post("followers", {appId: userAppId, followed: []})
         res.status(200).send(user)
@@ -108,8 +116,16 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
         console.log(e)
         res.status(500).send()
     }
-    
+})
 
+localAuth.patch("/user/verification/:verificationCode",  async (req: Request, res: Response)=>{
+    try {
+        const {verificationCode} = req.params
+        const userId = redis.hget("verification", verificationCode)
+        await patch("users", {appId: userId}, {active: true})
+    } catch(e) {
+        res.status(500).send("verification failed")
+    }
 })
 
 

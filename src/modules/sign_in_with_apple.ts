@@ -109,7 +109,8 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         appleRefreshToken: null,
         googleRefreshToken: null,
         signupEmail: req.body.signupEmail,
-        pictureUrl: null
+        pictureUrl: null,
+        active: true
     }
 
     CRUD.post("users", user)

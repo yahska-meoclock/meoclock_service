@@ -30,7 +30,8 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
           signupEmail: profile.id,
           googleAccessToken: accessToken,
           googleRefreshToken: refreshToken,
-          pictureUrl: null
+          pictureUrl: null,
+          active: true
         }
         CRUD.post("users", user)
         return done(null, user)
