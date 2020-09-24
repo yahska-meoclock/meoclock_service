@@ -29,7 +29,9 @@ export const createGoogleAuthStrategy = () => new GoogleStrategy({
           appleRefreshToken: null,
           signupEmail: profile.id,
           googleAccessToken: accessToken,
-          googleRefreshToken: refreshToken
+          googleRefreshToken: refreshToken,
+          pictureUrl: null,
+          active: true
         }
         CRUD.post("users", user)
         return done(null, user)

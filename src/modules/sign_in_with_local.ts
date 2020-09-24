@@ -1,11 +1,25 @@
 import express, { Request, Response } from 'express';
 import shortid from "shortid"
+import redis from "../connections/redis"
 import User from '../definitions/user'
-import CRUD from "../connections/nosql_crud"
+import CRUD, { patch } from "../connections/nosql_crud"
 import { generateHash, generateToken } from "../utils"
+import {Storage} from "@google-cloud/storage";
+import Multer from "multer";
+const {format} = require('util');
+
+//@ts-ignore
+const storage = new Storage({keyFileName: process.env.GOOGLE_APPLICATION_CREDENTIALS})
+const multer = Multer({
+    storage: Multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // no larger than 5mb, you can change as needed.
+    },
+});
 
 const localAuth = express.Router()
-
+//@ts-ignore
+const bucket = storage.bucket(process.env.PROFILE_PICTURES_BUCKET)
 
 
 localAuth.post("/try-login", async (req: Request, res: Response)=>{
@@ -34,7 +48,7 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
     }
 })
 
-localAuth.post("/signup", async (req: Request, res: Response)=>{
+localAuth.post("/signup", multer.single('file'), async (req: Request, res: Response)=>{
     console.log("Signing Up")
     try{
         if(!req.body.username || !req.body.password) {
@@ -47,6 +61,8 @@ localAuth.post("/signup", async (req: Request, res: Response)=>{
         }
         let token = await generateToken(req.body.username)
         const userAppId = `u-${shortid.generate()}`
+        const blobName = `pp-${userAppId}-${req.file.originalname}`
+        const cloudFileName = `https://storage.googleapis.com/${bucket.name}/${blobName}`
         const user:User = {
             id: null,
             appId: userAppId,
@@ -61,7 +77,35 @@ localAuth.post("/signup", async (req: Request, res: Response)=>{
             googleAccessToken: null,
             appleRefreshToken: null,
             googleRefreshToken: null,
-            signupEmail: req.body.signupEmail
+            signupEmail: req.body.signupEmail,
+            pictureUrl: cloudFileName,
+            active: false
+        }
+
+        if(req.file){
+            const blob = bucket.file(blobName)
+            const blobStream = blob.createWriteStream({
+                resumable: false,
+            });
+            
+            blobStream.on('error', (err: any) => {
+                console.log("Error occurred ", err)
+            });
+        
+            blobStream.on('finish', () => {
+                // The public URL can be used to directly access the file via HTTP.
+                const publicUrl = format(
+                    cloudFileName
+                );
+                user.pictureUrl=publicUrl
+            });
+            blobStream.end(req.file.buffer);
+        }
+        try {
+            const message = await sendVerificationEmail("s.yahska@gmail.com", userAppId)
+            console.log("Message sent ", message)
+        } catch(e) {
+            console.log("Message not sent ", e)
         }
         
         CRUD.post("users", user)
@@ -72,8 +116,16 @@ localAuth.post("/signup", async (req: Request, res: Response)=>{
         console.log(e)
         res.status(500).send()
     }
-    
+})
 
+localAuth.patch("/user/verification/:verificationCode",  async (req: Request, res: Response)=>{
+    try {
+        const {verificationCode} = req.params
+        const userId = redis.hget("verification", verificationCode)
+        await patch("users", {appId: userId}, {active: true})
+    } catch(e) {
+        res.status(500).send("verification failed")
+    }
 })
 
 

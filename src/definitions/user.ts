@@ -14,6 +14,8 @@ export class User {
     username:string = ""
     passwordHash:string|null = ""
     signupEmail:string|null = ""
+    pictureUrl: string|null = ""
+    active: boolean = false
 }
 
 export default User
