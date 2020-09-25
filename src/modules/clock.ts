@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import nosql_crud, { get, getAll, post, getSpecific, deleteEntity, patch } from '../connections/nosql_crud' 
+import nosql_crud, { get, getAll, post, getSpecific, deleteEntity, patch, appGetOne } from '../connections/nosql_crud' 
 import schedule from "node-schedule"
 import shortid from "shortid"
 import redis from "../connections/redis"
@@ -134,7 +134,7 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
             deadline:req.body.deadline, 
             appId: appId,
             //@ts-ignore
-            owner: req.user!._id,
+            owner: req.user!.appId,
             sponsors: req.body.sponsors, 
             dependents: req.body.dependents, 
             dependencies:req.body.dependencies, 
@@ -211,7 +211,7 @@ clockRoute.patch("/clock/achieve", async (req: Request, res: Response)=>{
 clockRoute.get("/clock/:clockId", async (req: Request, res: Response) => {
     try {
         const { clockId } = req.params;
-        const clock = await CRUD.appGet("clocks", clockId)
+        const clock = await appGetOne("clocks", clockId)
         if(clock){
             return res.json(clock).sendStatus(200)
         } else {

@@ -101,12 +101,6 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             });
             blobStream.end(req.file.buffer);
         }
-        try {
-            const message = await sendVerificationEmail("s.yahska@gmail.com", userAppId)
-            console.log("Message sent ", message)
-        } catch(e) {
-            console.log("Message not sent ", e)
-        }
         
         CRUD.post("users", user)
         CRUD.post("followers", {appId: userAppId, followed: []})

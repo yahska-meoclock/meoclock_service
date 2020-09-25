@@ -51,7 +51,7 @@ stripeRouterPrivate.post("/account/express", async (req: Request, res: Response)
 stripeRouterPrivate.get("/account/links", async (req: Request, res: Response)=>{
     try {
         //@ts-ignore
-        const account: any = await appGet("stripe", req.user!.appId)
+        const account: any = await appGetOne("stripe", req.user!.appId)
         if(account){
             const accountLinks = await stripe.accountLinks.create({
                 account: account.id,
