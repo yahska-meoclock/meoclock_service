@@ -111,6 +111,7 @@ export default {
     post,
     getAll,
     patch,
+    appGetOne,
     getSpecific,
     deleteEntity,
     expirePatch
