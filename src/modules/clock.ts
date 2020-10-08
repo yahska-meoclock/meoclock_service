@@ -47,7 +47,7 @@ const clockRoute = express.Router()
             $and:[
                 {
                    //@ts-ignore
-                   user: req.user!._id
+                   user: req.user!.appId
                 },
                 {
                     $or:[{achieved:true}, {expired:true}]
@@ -69,10 +69,10 @@ clockRoute.get('/ungrouped/clock', async (req: Request, res: Response) => {
             $and:[
                 {
                     //@ts-ignore
-                    owner: req.user._id
+                    owner: req.user.appId
                 },
                 {
-                    group:{$eq: null}
+                    group: null
                 }
             ]
         })
@@ -89,7 +89,7 @@ clockRoute.get("/grouped/clock", async (req: Request, res: Response)=>{
            $and:[
                {
                    //@ts-ignore
-                   owner: req.user!._id
+                   owner: req.user!.appId
                },
                {
                    group:{$ne: null}
@@ -222,5 +222,50 @@ clockRoute.get("/clock/:clockId", async (req: Request, res: Response) => {
     }
 })
 
+clockRoute.get("/clock/expire-check/:appId", async (req: Request, res: Response)=>{
+    try {
+        const { appId } = req.params
+        const clock = await appGetOne("clocks", appId)
+        const job = await redis.hget("clock_expiry_jobs", req.body.appId)
+        
+        if(clock){
+            return res.json(clock).sendStatus(200)
+        }else{
+            return res.sendStatus(404)
+        }
+    } catch(e) {
+
+    }
+})
+
+clockRoute.post("/public/clocks", async (req: Request, res: Response)=>{
+    if(req.body.clockName && req.body.deadline){
+        console.log("User ", req.user)
+        const appId = `c-${shortid.generate()}`
+        let result = await post("clocks", {
+            name:req.body.clockName, 
+            description:req.body.description, 
+            deadline:req.body.deadline, 
+            appId: appId,
+            owner: null,
+            sponsors: req.body.sponsors, 
+            dependents: req.body.dependents, 
+            dependencies:req.body.dependencies, 
+            audience:req.body.audience, 
+            challengers:req.body.challengers, 
+            supervisors:req.body.supervisors, 
+            group: req.body.group, 
+            timeline: req.body.timeline, 
+            expired:false, 
+            achieved:false,
+            isPublic: true,
+            asks: req.body.asks || null,
+            created: (new Date()).toISOString()
+        })
+        res.status(200).send(result)
+    }else {
+        res.status(500).send()
+    }
+})
 
 export default clockRoute

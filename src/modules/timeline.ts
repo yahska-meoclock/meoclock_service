@@ -6,12 +6,14 @@ const TimelineRouter = express.Router()
 TimelineRouter.post("/timeline", async (req: Request, res: Response)=>{
     try {
         const {timelineName, group} = req.body
-        const createdGroup = await CRUD.post("timelines", {
+        const createdTimeline = await CRUD.post("timelines", {
             timelineName: timelineName,
             groups: [group],
-            user: req.user!
+            user: req.user!,
+            createdAt: new Date()
         })
-        res.status(200).json(createdGroup)
+        const timelines = await CRUD.getSpecific("timelines", {groups: {$elemMatch:{$eq:group}}})
+        res.status(200).send(timelines)
     } catch(error){
         res.status(500).send(error)
     }

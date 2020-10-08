@@ -72,10 +72,8 @@ export async function expirePatch(entity: string, clocks: any, patch: any) {
 
 export async function post(entity: string, data: any) {
     const db = await getNoSqlConnection()
-    db.collection(entity).insertOne(data, (err:any, result:any)=>{
-        if(err) throw err;
-        return result
-    })
+    const result = await db.collection(entity).insertOne(data)
+    return result
 }
 
 export async function getAll(entity: string){
