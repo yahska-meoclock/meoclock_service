@@ -39,7 +39,7 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
         }
         let token = await generateToken(username)
         res.status(200).json({
-            user: {username: user.username},
+            user: {firstName: user.firstName, lastName: user.lastName, pictureUrl: user.pictureUrl, appId: user.appId, username: user.username},
             token:token
         })
     }catch(e){
@@ -100,12 +100,6 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
                 user.pictureUrl=publicUrl
             });
             blobStream.end(req.file.buffer);
-        }
-        try {
-            const message = await sendVerificationEmail("s.yahska@gmail.com", userAppId)
-            console.log("Message sent ", message)
-        } catch(e) {
-            console.log("Message not sent ", e)
         }
         
         CRUD.post("users", user)

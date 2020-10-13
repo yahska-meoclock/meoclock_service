@@ -25,6 +25,18 @@ export async function get(entity:string, id:string) {
     return result
 }
 
+export async function multiGet(entity: string, queries:string[]) {
+    const db = await getNoSqlConnection()
+    const result = await db.collection(entity).find({appId: {$in: queries}})
+    return result.toArray()
+}
+
+export async function appGetOne(entity:string, id:string) {
+    const db = await getNoSqlConnection()
+    const result = await db.collection(entity).find({appId: id})
+    return result
+}
+
 export async function appGet(entity:string, id:string) {
     const db = await getNoSqlConnection()
     const result = await db.collection(entity).findOne({appId: id})
@@ -60,10 +72,8 @@ export async function expirePatch(entity: string, clocks: any, patch: any) {
 
 export async function post(entity: string, data: any) {
     const db = await getNoSqlConnection()
-    db.collection(entity).insertOne(data, (err:any, result:any)=>{
-        if(err) throw err;
-        return result
-    })
+    const result = await db.collection(entity).insertOne(data)
+    return result
 }
 
 export async function getAll(entity: string){
@@ -99,6 +109,7 @@ export default {
     post,
     getAll,
     patch,
+    appGetOne,
     getSpecific,
     deleteEntity,
     expirePatch
