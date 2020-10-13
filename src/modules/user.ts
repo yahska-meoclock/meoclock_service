@@ -33,4 +33,17 @@ userRouter.get("/other/:userId", async (req: Request, res: Response)=>{
     }
 })
 
+userRouter.get("/user/:userId", async (req: Request, res: Response)=>{
+    try {
+        if(req.params.userId){
+            const user = await CRUD.appGet("users",req.params.userId)
+            res.status(200).json(user)
+        } else {
+            res.status(400).send()
+        }
+    } catch(e) {
+        res.status(500).send("Could not get User profile")
+    }
+})
+
 export default userRouter
