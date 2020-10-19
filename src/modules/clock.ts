@@ -226,15 +226,13 @@ clockRoute.get("/clock/expire-check/:appId", async (req: Request, res: Response)
     try {
         const { appId } = req.params
         const clock = await appGetOne("clocks", appId)
-        const job = await redis.hget("clock_expiry_jobs", req.body.appId)
-        
         if(clock){
-            return res.json(clock).sendStatus(200)
+            return res.json({expired: clock.expired}).send(200)
         }else{
             return res.sendStatus(404)
         }
     } catch(e) {
-
+        res.status(500).send(e)
     }
 })
 

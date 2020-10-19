@@ -33,13 +33,13 @@ export async function multiGet(entity: string, queries:string[]) {
 
 export async function appGetOne(entity:string, id:string) {
     const db = await getNoSqlConnection()
-    const result = await db.collection(entity).find({appId: id})
+    const result = await db.collection(entity).findOne({appId: id})
     return result
 }
 
 export async function appGet(entity:string, id:string) {
     const db = await getNoSqlConnection()
-    const result = await db.collection(entity).findOne({appId: id})
+    const result = await db.collection(entity).find({appId: id})
     return result
 }
 

@@ -63,7 +63,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(passport.initialize())
 passport.use(createJWTStrategy())
-passport.use(createGoogleAuthStrategy())
+//passport.use(createGoogleAuthStrategy())
 
 app.get('/', async (req: Request, res: Response) => {
     console.log("Sending home")

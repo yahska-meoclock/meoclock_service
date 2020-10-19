@@ -17,6 +17,7 @@ const {OAuth2Client} = require('google-auth-library');
 import CRUD from "../connections/nosql_crud"
 import User from '../definitions/user'
 import { generateToken } from "../utils"
+import { userInfo } from 'os';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 async function verify(token: string) {
@@ -112,34 +113,48 @@ googleAuth.get('/google/redirect', async function(req, res) {
   }catch(e) {
     res.status(500).send(e)
   }
-  const result = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`)
-  const userinfo = result.data
-  const user:User = {
-    id: null,
-    appId: `u-${shortid.generate()}`,
-    username: userinfo.email,
-    passwordHash: "",
-    token: null,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    googleEmail: userinfo.email,
-    appleEmail: null,
-    appleAccessToken: null,
-    googleAccessToken: tokens.access_token,
-    appleRefreshToken: null,
-    googleRefreshToken: tokens.refresh_token,
-    signupEmail: req.body.signupEmail,
-    pictureUrl: null,
-    active: true
+  try {
+    const result = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`)
+    const userinfo = result.data
+    const existingUser = await CRUD.getSpecific("users", {googleEmail: userinfo.email})
+    let user: User|null = null
+    let userAppId: string|undefined = undefined
+    if (existingUser.length==0){
+      const userAppId = `u-${shortid.generate()}`
+      user = {
+        id: null,
+        appId: userAppId,
+        username: userinfo.email,
+        passwordHash: "",
+        token: null,
+        firstName: userinfo.given_name,
+        lastName: userinfo.family_name,
+        googleEmail: userinfo.email,
+        appleEmail: null,
+        appleAccessToken: null,
+        googleAccessToken: tokens.access_token,
+        appleRefreshToken: null,
+        googleRefreshToken: tokens.refresh_token,
+        signupEmail: req.body.signupEmail,
+        pictureUrl: userinfo.picture,
+        active: true
+      }
+      CRUD.post("users", user)
+      CRUD.post("followers", {appId: userAppId, followed: []})
+    }else {
+      user = existingUser[0]
+      userAppId = user?.appId
+    }
+    let token = await generateToken(userinfo.email)
+    console.log("User Info ", userinfo, " Token Result ", tokenResult)
+    const userTempId = await redis.hget("authing_user_google", state)
+    const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
+    const urlSafeSecret = urlencode(secret)
+    res.redirect(`http://localhost:8080/linking/google/${urlSafeSecret}`)
+  } catch(e) {
+    res.status(500).send(e)
   }
-
-  CRUD.post("users", user)
-  let token = await generateToken(userinfo.email)
-  console.log("User Info ", userinfo, " Token Result ", tokenResult)
-  const userTempId = await redis.hget("authing_user_google", state)
-  const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
-  const urlSafeSecret = urlencode(secret)
-  res.redirect(`http://localhost:8080/linking/google/${urlSafeSecret}`)
+  
 });
 
 
