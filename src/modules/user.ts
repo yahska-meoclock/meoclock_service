@@ -24,7 +24,8 @@ userRouter.get("/other/:userId", async (req: Request, res: Response)=>{
     try {
         if(req.params.userId){
             const clocks = await CRUD.getSpecific("clocks", {owner: req.params.userId})
-            res.status(200).json(clocks)
+            const user = await CRUD.appGetOne("users", req.params.userId)
+            res.status(200).json({user, clocks})
         } else {
             res.status(400).send()
         }
@@ -36,7 +37,7 @@ userRouter.get("/other/:userId", async (req: Request, res: Response)=>{
 userRouter.get("/user/:userId", async (req: Request, res: Response)=>{
     try {
         if(req.params.userId){
-            const user = await CRUD.appGet("users",req.params.userId)
+            const user = await CRUD.appGetOne("users",req.params.userId)
             res.status(200).json(user)
         } else {
             res.status(400).send()

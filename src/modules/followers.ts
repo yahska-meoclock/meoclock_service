@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import CRUD, { get, post, patch, patchAddToSet, appGetOne, multiGet } from '../connections/nosql_crud' 
+import CRUD, { get, post, patch, patchAddToSet, appGet, appGetOne, multiGet } from '../connections/nosql_crud' 
 
 const FollowerRoute = express.Router()
 
@@ -10,8 +10,12 @@ FollowerRoute.post("/follow/user", async(req: Request, res: Response)=>{
             //@ts-ignore
             await patchAddToSet("followers", {appId: req.user!.appId}, {followed: req.body.followedUser})
             //@ts-ignore
-            const followers = await appGet("followers", req.user!.appId)
-            res.status(200).json(followers)
+            const followers = await appGetOne("followers", req.user!.appId)
+            let followedUsers = []
+            if(followers.followed.length>0){
+                followedUsers = await multiGet("users", followers.followed)
+            }
+            res.status(200).json(followedUsers)
         }else{
             res.sendStatus(400)
         }
