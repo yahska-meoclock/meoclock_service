@@ -14,7 +14,7 @@ stripeRouterPublic.get("/stripe/authorize-oauth", async (req: Request, res: Resp
         const connected_account_id = response.stripe_user_id;
         console.log("Connected account ", connected_account_id)
         console.log("Response ", response)
-        res.redirect(301, "https://localhost:8080/profile")
+        res.redirect(301, `${process.env.WEB_ENDPOINT}/profile`)
     }, (err: any) => {
         if (err.type === 'StripeInvalidGrantError') {
             return res.status(400).json({error: 'Invalid authorization code: ' + code});
@@ -25,11 +25,11 @@ stripeRouterPublic.get("/stripe/authorize-oauth", async (req: Request, res: Resp
 })
 
 stripeRouterPublic.get("/stripe/reauth", async (req: Request, res: Response)=> {
-    res.redirect("http://localhost:8080/profile")
+    res.redirect(`${process.env.WEB_ENDPOINT}/profile`)
 })
 
 stripeRouterPublic.get("/stripe/return", async (req: Request, res: Response)=> {
-    res.redirect("http://localhost:8080/profile")
+    res.redirect(`${process.env.WEB_ENDPOINT}/profile`)
 })
 
 export default stripeRouterPublic
