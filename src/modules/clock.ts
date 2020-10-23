@@ -274,10 +274,11 @@ clockRoute.get("/comment/clock/:clockId", async(req:Request, res: Response)=>{
 })
 
 clockRoute.post("/comment/clock/:clockId", async(req: Request, res: Response)=>{
-    if(req.body.comment && req.body.clock && req.body.commenter) {
+    if(req.body.clock && req.body.commenter && req.body.donation) {
         const comment = new Comment()
         const commenter = req.body.commenter
-        comment.comment = req.body.comment
+        comment.comment = req.body.comment || ""
+        comment.donation = req.body.donation
         comment.clock = req.body.clock
         comment.commenter = {userId:commenter.appId, picture: commenter.pictureUrl, firstName: commenter.firstName, lastName: commenter.lastName}
         const result = await CRUD.post("comments", comment)

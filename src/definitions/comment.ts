@@ -11,6 +11,7 @@ export default class Comment {
     comment: string = ""
     commenter: Commenter = new Commenter()
     clock: string = ""
+    donation: number = 0
     appId: string = `cmt-${shortid.generate()}`
     createdAt: Date = new Date()
 }
