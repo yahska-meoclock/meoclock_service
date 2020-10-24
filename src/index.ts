@@ -5,6 +5,7 @@ import AppleAuthRouter from './modules/sign_in_with_apple'
 import GoogleAuthRouter from './modules/sign_in_with_google'
 import listEndpoints from 'express-list-endpoints'
 import bodyParser from 'body-parser'
+import morgan from 'morgan'
 import passport from 'passport';
 import { createJWTStrategy } from './modules/jwt-strategy';
 import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
@@ -20,6 +21,7 @@ import FollowerRoute from "./modules/followers"
 import wss from "./connections/websocket"
 import schedule from "node-schedule"
 import CRUD from "./connections/nosql_crud"
+import logger from "./utilities/logger"
 
 var whitelist = ['https://www.meoclocks.com', 'https://meoclocks.com', 'http://localhost:9000', 'http://127.0.0.1:9000']
 var corsOptions = {
@@ -45,6 +47,8 @@ app.enable('strict routing')
 const port = process.env.SERVER_PORT;
 
 app.use(cors())
+logger.debug("Overriding 'Express' logger");
+app.use(morgan("combined", { stream: logger.stream }));
 
 wss.on('connection', (ws:any) => {
   ws.on('message', (message:any) => {
@@ -104,5 +108,11 @@ schedule.scheduleJob("* * 0 * *", async ()=>{
   CRUD.expirePatch("clocks", expiredClocks, {expired: true})
 })
 
+app.use(function (err: any, req: any, res: any, next: any) {
+  if (err) {
+    logger.error(err)
+  }
+  next()
+})
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
 listEndpoints(app).forEach((e)=>console.log(e))

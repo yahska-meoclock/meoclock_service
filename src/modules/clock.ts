@@ -5,6 +5,7 @@ import shortid from "shortid"
 import redis from "../connections/redis"
 import CRUD from '../connections/nosql_crud' 
 import Comment from "../definitions/comment"
+import logger from '../utilities/logger';
 
 const clockRoute = express.Router()
 
@@ -214,11 +215,12 @@ clockRoute.get("/clock/self/:clockId", async (req: Request, res: Response) => {
         const { clockId } = req.params;
         const clock = await appGetOne("clocks", clockId)
         if(clock){
-            return res.json(clock).sendStatus(200)
+            return res.json(clock)
         } else {
             return res.sendStatus(404)
         }
     } catch(e) {
+        logger.error(e)
         res.status(500).send(e)
     }
 })
@@ -268,9 +270,14 @@ clockRoute.post("/public/clocks", async (req: Request, res: Response)=>{
 })
 
 clockRoute.get("/comment/clock/:clockId", async(req:Request, res: Response)=>{
-    const {clockId} = req.params
-    const comments = await CRUD.getSpecific("comments", {clock: clockId})
-    res.status(200).send(comments)
+    try {
+        const {clockId} = req.params
+        const comments = await CRUD.getSpecific("comments", {clock: clockId})
+        res.status(200).send(comments)
+    } catch (err) {
+        logger.error(err)
+    }
+
 })
 
 clockRoute.post("/comment/clock/:clockId", async(req: Request, res: Response)=>{
