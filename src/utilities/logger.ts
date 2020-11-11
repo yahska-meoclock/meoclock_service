@@ -4,13 +4,13 @@ const logger: any = createLogger({
     transports: [
         new winston.transports.File({
             level: 'info',
-            filename: `${__dirname}/logs/all-logs.log`,
+            filename: `logs/all-logs.log`,
             handleExceptions: true,
             format: winston.format.combine(winston.format.json(), winston.format.colorize(),)
         }),
         new winston.transports.File({
             level: 'error',
-            filename: `${__dirname}/logs/all-errors.log`,
+            filename: `logs/all-errors.log`,
             handleExceptions: true,
             format: winston.format.combine(winston.format.json(), winston.format.colorize(),)
         }),
@@ -26,7 +26,7 @@ const logger: any = createLogger({
 
 logger.stream = {
     write: function(message: any, encoding: any){
-        logger.log('info', message);
+        logger.info(message);
     }
 }
 
