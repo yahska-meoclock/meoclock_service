@@ -106,3 +106,5 @@ dist
 *.p8
 
 secrets/
+
+.server.env

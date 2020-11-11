@@ -4,6 +4,8 @@ import schedule from "node-schedule"
 import shortid from "shortid"
 import redis from "../connections/redis"
 import CRUD from '../connections/nosql_crud' 
+import Comment from "../definitions/comment"
+import logger from '../utilities/logger';
 
 const clockRoute = express.Router()
 
@@ -208,16 +210,17 @@ clockRoute.patch("/clock/achieve", async (req: Request, res: Response)=>{
 /**
  * Get specific clock with clock id
  */
-clockRoute.get("/clock/:clockId", async (req: Request, res: Response) => {
+clockRoute.get("/clock/self/:clockId", async (req: Request, res: Response) => {
     try {
         const { clockId } = req.params;
         const clock = await appGetOne("clocks", clockId)
         if(clock){
-            return res.json(clock).sendStatus(200)
+            return res.json(clock)
         } else {
             return res.sendStatus(404)
         }
     } catch(e) {
+        logger.error(e)
         res.status(500).send(e)
     }
 })
@@ -263,6 +266,32 @@ clockRoute.post("/public/clocks", async (req: Request, res: Response)=>{
         res.status(200).send(result)
     }else {
         res.status(500).send()
+    }
+})
+
+clockRoute.get("/comment/clock/:clockId", async(req:Request, res: Response)=>{
+    try {
+        const {clockId} = req.params
+        const comments = await CRUD.getSpecific("comments", {clock: clockId})
+        res.status(200).send(comments)
+    } catch (err) {
+        logger.error(err)
+    }
+
+})
+
+clockRoute.post("/comment/clock/:clockId", async(req: Request, res: Response)=>{
+    if(req.body.clock && req.body.commenter && req.body.donation) {
+        const comment = new Comment()
+        const commenter = req.body.commenter
+        comment.comment = req.body.comment || ""
+        comment.donation = req.body.donation
+        comment.clock = req.body.clock
+        comment.commenter = {userId:commenter.appId, picture: commenter.pictureUrl, firstName: commenter.firstName, lastName: commenter.lastName}
+        const result = await CRUD.post("comments", comment)
+        res.status(200).send(result.ops[0])
+    } else {
+        res.sendStatus(400)
     }
 })
 

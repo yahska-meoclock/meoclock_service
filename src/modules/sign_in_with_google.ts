@@ -150,7 +150,7 @@ googleAuth.get('/google/redirect', async function(req, res) {
     const userTempId = await redis.hget("authing_user_google", state)
     const secret = CryptoJS.AES.encrypt(token, userTempId!).toString()
     const urlSafeSecret = urlencode(secret)
-    res.redirect(`http://localhost:8080/linking/google/${urlSafeSecret}`)
+    res.redirect(`${process.env.WEB_ENDPOINT}/linking/google/${urlSafeSecret}`)
   } catch(e) {
     res.status(500).send(e)
   }
