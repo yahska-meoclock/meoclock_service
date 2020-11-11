@@ -114,5 +114,11 @@ app.use(function (err: any, req: any, res: any, next: any) {
   }
   next()
 })
-app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
-listEndpoints(app).forEach((e)=>console.log(e))
+
+try {
+  app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
+  listEndpoints(app).forEach((e)=>console.log(e))
+} catch(e) {
+  logger.error(e)
+}
+

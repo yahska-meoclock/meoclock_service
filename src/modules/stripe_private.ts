@@ -35,6 +35,7 @@ stripeRouterPrivate.post("/account/express", async (req: Request, res: Response)
     try {
         const account = await stripe.accounts.create({
             type: 'express',
+            business_type: "individual",
             capabilities:{
                 transfers: {requested: true},
                 card_payments: {requested: true}
@@ -42,8 +43,8 @@ stripeRouterPrivate.post("/account/express", async (req: Request, res: Response)
         });
         const accountLinks = await stripe.accountLinks.create({
             account: account.id,
-            refresh_url: 'https://5be99a601447.ngrok.io/stripe/reauth',
-            return_url: 'https://5be99a601447.ngrok.io/stripe/return',
+            refresh_url: 'https://1c78629a36da.ngrok.io/stripe/reauth',
+            return_url: 'https://1c78629a36da.ngrok.io/stripe/return',
             type: 'account_onboarding',
         });
         //@ts-ignore
