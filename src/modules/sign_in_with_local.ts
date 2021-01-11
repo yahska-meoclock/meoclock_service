@@ -80,7 +80,7 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             pictureUrl: null,
             active: false
         }
-        if(req.file){
+        if(process.env.MODE=="production" && req.file){
             const blobName = `pp-${userAppId}-${req.file.originalname}`
             const cloudFileName = `https://storage.googleapis.com/${bucket.name}/${blobName}`
             const blob = bucket.file(blobName)

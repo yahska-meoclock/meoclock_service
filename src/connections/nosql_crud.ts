@@ -65,7 +65,7 @@ export async function patchAddToSet(entity: string, filter: any, patch: any) {
 
 export async function expirePatch(entity: string, clocks: any, patch: any) {
     const db = await getNoSqlConnection()
-    const filter = {_id: {$in: clocks}}
+    const filter = {appId: {$in: clocks}}
     const updatedResult = await db.collection(entity).updateOne(filter, {$set: patch})
     return updatedResult
 }

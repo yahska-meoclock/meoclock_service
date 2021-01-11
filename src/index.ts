@@ -70,7 +70,6 @@ passport.use(createJWTStrategy())
 //passport.use(createGoogleAuthStrategy())
 
 app.get('/', async (req: Request, res: Response) => {
-    console.log("Sending home")
     res.status(200).sendFile("index.html", {root:"src"})
 })
 
@@ -96,16 +95,17 @@ app.use(TimelineRouter)
 app.use(StripeRouterPrivate)
 app.use(FollowerRoute)
 
-schedule.scheduleJob("* * 0 * *", async ()=>{
-  console.log("Executing")
+console.log("scheduling job")
+schedule.scheduleJob("* * 0 * * *", async (dateTime)=>{
   const allClocks = await CRUD.getSpecific("clocks", {expired: false})
   let expiredClocks: any[] = []
   allClocks.forEach((clock: any)=>{
     if(clock.deadline > new Date() && !clock.achieved) {
-      expiredClocks.push(clock._id)
+      expiredClocks.push(clock.appId)
     }
   })
-  CRUD.expirePatch("clocks", expiredClocks, {expired: true})
+  await CRUD.expirePatch("clocks", expiredClocks, {expired: true})
+  logger.info(`Job scheduled at ${dateTime} and executed at ${new Date()}`)
 })
 
 app.use(function (err: any, req: any, res: any, next: any) {

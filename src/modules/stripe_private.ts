@@ -113,17 +113,21 @@ stripeRouterPrivate.post("/stripe/sponsor", async(req: Request, res: Response) =
         const {amount, sponsored} = req.body
         if(amount && sponsored){
             let destinationAccountId = await CRUD.getSpecific("stripe", {userId: sponsored})
-            destinationAccountId=destinationAccountId[0]
-            const paymentIntent = await stripe.paymentIntents.create({
-                payment_method_types: ['card'],
-                amount: amount*100,
-                currency: 'usd',
-                application_fee_amount: 100,
-                transfer_data: {
-                  destination: destinationAccountId.stripeAccount,
-                },
-            });
-            return res.status(200).send(paymentIntent.client_secret)
+            if ( destinationAccountId.length > 0) {
+                destinationAccountId=destinationAccountId[0]
+                const paymentIntent = await stripe.paymentIntents.create({
+                    payment_method_types: ['card'],
+                    amount: amount*100,
+                    currency: 'usd',
+                    application_fee_amount: 100,
+                    transfer_data: {
+                      destination: destinationAccountId.stripeAccount,
+                    },
+                });
+                return res.status(200).send(paymentIntent.client_secret)
+            } else {
+                return res.status(200).send(null)
+            }
         } else {
             res.sendStatus(400)
         }

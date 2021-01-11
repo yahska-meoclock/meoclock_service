@@ -49,7 +49,7 @@ const clockRoute = express.Router()
             $and:[
                 {
                    //@ts-ignore
-                   user: req.user!.appId
+                   owner: req.user!.appId
                 },
                 {
                     $or:[{achieved:true}, {expired:true}]
@@ -130,6 +130,7 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
     console.log("Posting Clock for ", req.user)
     if(req.body.clockName && req.body.deadline){
         const appId = `c-${shortid.generate()}`
+        debugger
         let result = await post("clocks", {
             name:req.body.clockName, 
             description:req.body.description, 
