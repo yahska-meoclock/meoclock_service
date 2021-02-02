@@ -76,6 +76,12 @@ export async function post(entity: string, data: any) {
     return result
 }
 
+export async function postMany(entity: string, data:[any]) {
+    const db = await getNoSqlConnection()
+    const result = await db.collection(entity).insertMany(data)
+    return result
+}
+
 export async function getAll(entity: string){
     const db = await getNoSqlConnection()
     const result = await db.collection(entity).find({}).toArray()
@@ -107,6 +113,7 @@ export default {
     appGet,
     get,
     post,
+    postMany,
     getAll,
     patch,
     appGetOne,

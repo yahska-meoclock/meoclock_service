@@ -47,6 +47,9 @@ app.enable('strict routing')
 const port = process.env.SERVER_PORT;
 
 app.use(cors())
+
+app.use(express.static('assets'))
+
 logger.debug("Overriding 'Express' logger");
 app.use(morgan("combined", { stream: logger.stream }));
 
@@ -64,7 +67,16 @@ wss.on('connection', (ws:any) => {
 app.use(bodyParser.urlencoded({ extended: false }))
  
 // parse application/json
-app.use(bodyParser.json())
+app.use(bodyParser.json({
+  verify: function (req, res, buf) {
+    //@ts-ignore
+    var url = req.originalUrl;
+    if (url.startsWith('/stripe/webhook')) {
+      //@ts-ignore
+       req.rawBody = buf.toString();
+    }
+  }
+}));
 app.use(passport.initialize())
 passport.use(createJWTStrategy())
 //passport.use(createGoogleAuthStrategy())
@@ -96,15 +108,19 @@ app.use(StripeRouterPrivate)
 app.use(FollowerRoute)
 
 console.log("scheduling job")
-schedule.scheduleJob("* * 0 * * *", async (dateTime)=>{
+
+const expireClocks = async ()=>{
   const allClocks = await CRUD.getSpecific("clocks", {expired: false})
   let expiredClocks: any[] = []
   allClocks.forEach((clock: any)=>{
-    if(clock.deadline > new Date() && !clock.achieved) {
+    if(new Date(clock.deadline) < new Date() && !clock.achieved && !clock.expired) {
       expiredClocks.push(clock.appId)
     }
   })
   await CRUD.expirePatch("clocks", expiredClocks, {expired: true})
+}
+schedule.scheduleJob("* * * 0 * *", async (dateTime)=>{
+  await expireClocks()
   logger.info(`Job scheduled at ${dateTime} and executed at ${new Date()}`)
 })
 
@@ -118,6 +134,8 @@ app.use(function (err: any, req: any, res: any, next: any) {
 try {
   app.listen(port, () => console.log(`Example app listening at http://localhost:${port} \n`))
   listEndpoints(app).forEach((e)=>console.log(e))
+  console.log("Startup expiring clock")
+  expireClocks()
 } catch(e) {
   logger.error(e)
 }

@@ -1,11 +1,12 @@
 import express, { Request, Response } from 'express';
-import nosql_crud, { get, getAll, post, getSpecific, deleteEntity, patch, appGetOne } from '../connections/nosql_crud' 
+import nosql_crud, { get, getAll, post, getSpecific, deleteEntity, patch, appGetOne, postMany } from '../connections/nosql_crud' 
 import schedule from "node-schedule"
 import shortid from "shortid"
 import redis from "../connections/redis"
 import CRUD from '../connections/nosql_crud' 
 import Comment from "../definitions/comment"
 import logger from '../utilities/logger';
+import { isOwner } from '../utilities/clock_utilities';
 
 const clockRoute = express.Router()
 
@@ -112,7 +113,8 @@ clockRoute.get("/grouped/clock", async (req: Request, res: Response)=>{
  * DELETE existing o'clock
  */
  clockRoute.delete('/clock', async (req: Request, res: Response)=>{
-     if(req.body.appId){
+     //@ts-ignore
+     if(req.body.appId && await isOwner(req.body.appId, req.user.appId)){
          try {
             const deleteResult = await deleteEntity("clocks", {appId: req.body.appId})
             redis.hdel("clock_expiry_jobs", req.body.appId)
@@ -130,7 +132,6 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
     console.log("Posting Clock for ", req.user)
     if(req.body.clockName && req.body.deadline){
         const appId = `c-${shortid.generate()}`
-        debugger
         let result = await post("clocks", {
             name:req.body.clockName, 
             description:req.body.description, 
@@ -152,12 +153,12 @@ clockRoute.post('/clock', async(req: Request, res: Response)=>{
             asks: req.body.asks || null,
             created: (new Date()).toISOString()
         })
-        const job: any = schedule.scheduleJob(new Date(req.body.deadline), async function(appId: string){
+        const job: any = schedule.scheduleJob(`j-${appId}`, new Date(req.body.deadline), async function(appId: string){
             console.log("Clock expired")
             //@ts-ignore
             await patch("clocks", {appId: appId, achieved: false}, {expired: true})
         }.bind(null, appId))
-        redis.hset("clock_expiry_jobs", appId, job)
+        redis.hset("clock_expiry_jobs", appId, `j-${appId}`)
         res.status(200).send(result)
     }else {
         res.status(500).send()
@@ -193,17 +194,38 @@ clockRoute.patch('/clock', async(req: Request, res: Response)=>{
  */
 clockRoute.patch("/clock/achieve", async (req: Request, res: Response)=>{
     try {
-        if(req.body.appId){
+        //@ts-ignore
+        if(req.body.appId && await isOwner(req.body.appId, req.user.appId)){
+
             let result = await patch("clocks", {appId:req.body.appId}, {achieved: true})
-            res.status(200).send(result)
-            const job = await redis.hget("clock_expiry_jobs", req.body.appId)
+            let sponsors = await getSpecific("comments", {clock:req.body.appId, donation:{$gt:0}})
+            const records = sponsors.reduce((acc: any, value: any, k: number)=>{
+                const user = value.commenter.userId
+                const donation = value.donation
+                const clock = value.clock
+                if (acc.mapping[user]!=undefined){
+                    acc.collection[acc.mapping[user]].donation = acc.collection[acc.mapping[user]].donation + donation
+                } else {
+                    acc.mapping[user] = acc.collection.length
+                    acc.collection.push({user, donation, clock})  
+                }
+                return acc
+            }, {mapping:{},collection:[]})
+            postMany("promises", records.collection)
+            const jobName = await redis.hget("clock_expiry_jobs", req.body.appId)
             //@ts-ignore
-            if(job) job.cancel()
+            if(jobName) {
+                var my_job = schedule.scheduledJobs[jobName as string];
+                if(my_job) my_job.cancel()
+                
+            }
             redis.hdel("clock_expiry_jobs", req.body.appId)
+            res.status(200).send(result)
         }else{
             res.status(400).send("")
         }
     }catch(e) {
+        console.log(e)
         res.status(500).send(e)
     }
 })
@@ -241,7 +263,7 @@ clockRoute.get("/clock/expire-check/:appId", async (req: Request, res: Response)
 })
 
 clockRoute.post("/public/clocks", async (req: Request, res: Response)=>{
-    if(req.body.clockName && req.body.deadline){
+    if(req.user && req.body.clockName && req.body.deadline){
         console.log("User ", req.user)
         const appId = `c-${shortid.generate()}`
         let result = await post("clocks", {
@@ -249,7 +271,7 @@ clockRoute.post("/public/clocks", async (req: Request, res: Response)=>{
             description:req.body.description, 
             deadline:req.body.deadline, 
             appId: appId,
-            owner: null,
+            owner: req.user!,
             sponsors: req.body.sponsors, 
             dependents: req.body.dependents, 
             dependencies:req.body.dependencies, 
@@ -282,12 +304,13 @@ clockRoute.get("/comment/clock/:clockId", async(req:Request, res: Response)=>{
 })
 
 clockRoute.post("/comment/clock/:clockId", async(req: Request, res: Response)=>{
-    if(req.body.clock && req.body.commenter && req.body.donation) {
+    if(req.body.clock && req.body.commenter && req.body.donation>=0) {
         const comment = new Comment()
         const commenter = req.body.commenter
         comment.comment = req.body.comment || ""
         comment.donation = req.body.donation
         comment.clock = req.body.clock
+        //@ts-ignore
         comment.commenter = {userId:commenter.appId, picture: commenter.pictureUrl, firstName: commenter.firstName, lastName: commenter.lastName}
         const result = await CRUD.post("comments", comment)
         res.status(200).send(result.ops[0])

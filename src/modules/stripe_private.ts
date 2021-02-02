@@ -1,7 +1,9 @@
 import express, { Request, Response } from 'express';
 import { uuid } from 'uuidv4'
 import redis from "../connections/redis"
+import shortid from "shortid"
 import CRUD, { appGet, get, getAll, post, getSpecific, deleteEntity, patch } from '../connections/nosql_crud' 
+import logger from '../utilities/logger';
 const stripe = require('stripe')('sk_test_FWOmLs9sKd65HmDQ4tKrUFzr');
 
 // const paymentIntent = await stripe.paymentIntents.create({
@@ -33,25 +35,59 @@ stripeRouterPrivate.get("/get-stripe-auth-link", async (req: Request, res: Respo
 
 stripeRouterPrivate.post("/account/express", async (req: Request, res: Response)=>{
     try {
+        //@ts-ignore
+        const stripeAccount = await CRUD.getSpecific("stripe", {userId: req.user!.appId})
+
         const account = await stripe.accounts.create({
             type: 'express',
             business_type: "individual",
             capabilities:{
                 transfers: {requested: true},
                 card_payments: {requested: true}
+            },
+            business_profile:{
+                mcc:5734,
+                name:"meoclocks",
+                support_url:"https://www.meoclocks.com/support",
+                url:"https://www.meoclocks.com/support"
             }
         });
         const accountLinks = await stripe.accountLinks.create({
             account: account.id,
-            refresh_url: 'https://1c78629a36da.ngrok.io/stripe/reauth',
-            return_url: 'https://1c78629a36da.ngrok.io/stripe/return',
+            refresh_url: process.env.STRIPE_REDIRECT,
+            return_url: process.env.STRIPE_REDIRECT,
             type: 'account_onboarding',
         });
-        //@ts-ignore
-        post("stripe", {stripeAccount: account.id, accountLinks: accountLinks, userId: req.user!.appId})
+        if (stripeAccount.length>0){
+            //@ts-ignore
+            await patch("stripe", {userId: req.user!.appId}, {stripeAccount: account.id, accountLinks: accountLinks})
+        } else {
+            //@ts-ignore
+            await post("stripe", {stripeAccount: account.id, accountLinks: accountLinks, userId: req.user!.appId})
+        }
+        
         res.status(200).send(accountLinks.url) 
     } catch (e) {
         return res.status(500).send(e)
+    }
+})
+
+stripeRouterPrivate.get("/stripe/onboarded", async(req: Request, res: Response)=>{
+    try{
+        //@ts-ignore
+        //acct_1IBysTRbCXwFuUvf
+        //u-muyn7hbVQ
+        const account = await CRUD.getSpecific("stripe", {userId: req.user!.appId})
+        const stripeAccountId = account[0].stripeAccount
+        const stripeAccount = await stripe.accounts.retrieve(
+            stripeAccountId
+        );
+        res.status(200).json({
+            chargesEnabled: stripeAccount.charges_enabled,
+            detailsSubmitted: stripeAccount.details_submitted
+        })
+    } catch(e) {
+        res.status(500).send("Something went wrong while getting account")
     }
 })
 
@@ -78,8 +114,8 @@ stripeRouterPrivate.get("/account/links", async (req: Request, res: Response)=>{
         if(account){
             const accountLinks = await stripe.accountLinks.create({
                 account: account.id,
-                refresh_url: 'https://5be99a601447.ngrok.io/stripe/reauth',
-                return_url: 'https://5be99a601447.ngrok.io/stripe/return',
+                refresh_url: process.env.STRIPE_REDIRECT,
+                return_url: process.env.STRIPE_REDIRECT,
                 type: 'account_onboarding',
             });
 
@@ -92,8 +128,6 @@ stripeRouterPrivate.get("/account/links", async (req: Request, res: Response)=>{
 
 stripeRouterPrivate.post("/stripe/payment", async (req: Request, res: Response) => {
     try {
-
-        
         const paymentIntent = await stripe.paymentIntents.create({
             payment_method_types: ['card'],
             amount: 1000,
@@ -110,31 +144,76 @@ stripeRouterPrivate.post("/stripe/payment", async (req: Request, res: Response) 
 
 stripeRouterPrivate.post("/stripe/sponsor", async(req: Request, res: Response) => {
     try {
-        const {amount, sponsored} = req.body
-        if(amount && sponsored){
-            let destinationAccountId = await CRUD.getSpecific("stripe", {userId: sponsored})
-            if ( destinationAccountId.length > 0) {
-                destinationAccountId=destinationAccountId[0]
-                const paymentIntent = await stripe.paymentIntents.create({
-                    payment_method_types: ['card'],
-                    amount: amount*100,
-                    currency: 'usd',
-                    application_fee_amount: 100,
-                    transfer_data: {
-                      destination: destinationAccountId.stripeAccount,
-                    },
-                });
-                return res.status(200).send(paymentIntent.client_secret)
+        const {amount, sponsored, clock} = req.body
+        if(amount && sponsored && clock){
+            let destinationAccount = await CRUD.getSpecific("stripe", {userId: sponsored})
+            if ( destinationAccount.length > 0) {
+                const destinationAccountId = destinationAccount[0].stripeAccount
+                const stripeAccount = await stripe.accounts.retrieve(
+                    destinationAccountId
+                );
+                if (stripeAccount.charges_enabled && stripeAccount.details_submitted) {
+                    const paymentIntent = await stripe.paymentIntents.create({
+                        payment_method_types: ['card'],
+                        amount: amount*100,
+                        currency: 'usd',
+                        application_fee_amount: 100,
+                        transfer_data: {
+                          destination: destinationAccountId,
+                        },
+                    });
+                    //@ts-ignore
+                    CRUD.post("payment-intents", {appId:"p1-"+shortid.generate(), from:req.user!.appId, intent:paymentIntent.id, to: sponsored, succeeded: false, clock: clock, succeeded: false})
+                    return res.status(200).send({paymentSecret: paymentIntent.client_secret,
+                        chargesEnabled: stripeAccount.charges_enabled,
+                        detailsSubmitted: stripeAccount.details_submitted
+                    })
+                } else {
+                    return res.status(200).send({
+                        paymentSecret: null,
+                        chargesEnabled: stripeAccount.charges_enabled,
+                        detailsSubmitted: stripeAccount.details_submitted
+                    })
+                }
             } else {
-                return res.status(200).send(null)
+                return res.status(200).send({paymentSecret: null})
             }
         } else {
             res.sendStatus(400)
         }
     } catch(e){
+        console.log(e)
         return res.status(500).send(e)
     }
 })
+
+stripeRouterPrivate.get("/stripe/status", async(req: Request, res: Response)=>{
+    try {
+        //@ts-ignore
+        const stripeRecord = await CRUD.getSpecific("stripe", {userId: req.user?.appId})
+        if(stripeRecord.length>0){
+            return res.status(200).send(true)
+        } else {
+            return res.status(200).send(false)
+        }
+    } catch(e) {
+        return res.status(500).send(e)
+    }    
+})
+
+stripeRouterPrivate.delete("/stripe", async(req: Request, res: Response) => {
+    try {
+        //@ts-ignore
+        await CRUD.deleteEntity("stripe", {userId: req.user?.appId})
+        return res.sendStatus(200)
+    } catch(e) {
+        return res.status(500).send(e)
+    } 
+})
+
+
+
+
 
 export default stripeRouterPrivate
 
