@@ -68,10 +68,11 @@ userRouter.get("/user/:userId", async (req: Request, res: Response)=>{
     }
 })
 
-userRouter.get("/user/promises", async (req: Request, res: Response)=>{
+userRouter.get("/promises/user", async (req: Request, res: Response)=>{
     try {
         //@ts-ignore
-        const promises = await getSpecific("promises", {user: req.user!.appId})
+        const promises = await getSpecific("promises", {promisee: req.user!.appId})
+
         return res.status(200).send(promises)
     } catch (e) {
         res.status(500).send("Could not load User promises")

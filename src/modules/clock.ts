@@ -198,20 +198,26 @@ clockRoute.patch("/clock/achieve", async (req: Request, res: Response)=>{
         if(req.body.appId && await isOwner(req.body.appId, req.user.appId)){
 
             let result = await patch("clocks", {appId:req.body.appId}, {achieved: true})
+            let clock = await appGetOne("clocks", req.body.appId)
             let sponsors = await getSpecific("comments", {clock:req.body.appId, donation:{$gt:0}})
             const records = sponsors.reduce((acc: any, value: any, k: number)=>{
-                const user = value.commenter.userId
+                //@ts-ignore
+                const user = {appId: req.user!.appId, firstName: req.user!.firstName, lastName: req.user!.firstName}
                 const donation = value.donation
-                const clock = value.clock
-                if (acc.mapping[user]!=undefined){
-                    acc.collection[acc.mapping[user]].donation = acc.collection[acc.mapping[user]].donation + donation
+                //@ts-ignore
+                const promisee = value.commenter!.userId
+                const clockElement = {appId: value.clock, name:clock.name}
+                if (acc.mapping[user.appId]!=undefined){
+                    acc.collection[acc.mapping[user.appId]].donation = acc.collection[acc.mapping[user.appId]].donation + donation
                 } else {
-                    acc.mapping[user] = acc.collection.length
-                    acc.collection.push({user, donation, clock})  
+                    acc.mapping[user.appId] = acc.collection.length
+                    acc.collection.push({user, donation, promisee, clockElement})  
                 }
                 return acc
             }, {mapping:{},collection:[]})
-            postMany("promises", records.collection)
+            if(records.collection.length > 0){
+                postMany("promises", records.collection)
+            }
             const jobName = await redis.hget("clock_expiry_jobs", req.body.appId)
             //@ts-ignore
             if(jobName) {
