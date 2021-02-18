@@ -5,6 +5,7 @@ import CRUD from "../connections/nosql_crud"
 const stripeRouterPublic = express.Router()
 import shortid from "shortid"
 import logger from '../utilities/logger';
+import axios from "axios"
 
 //code=ac_HWpxUhep0Th1fmnl2RfPjtuaRLW7UBzE
 
@@ -59,7 +60,7 @@ stripeRouterPublic.post("/public/stripe/sponsor", async(req: Request, res: Respo
                         },
                     });
                     //@ts-ignore
-                    CRUD.post("payment-intents", {appId:"p1-"+shortid.generate(), from:"unknown", intent:paymentIntent.id, to: sponsoredUser, succeeded: false, clock: clock})
+                    CRUD.post("payment-intents", {appId:"pi-"+shortid.generate(), from:"unknown", intent:paymentIntent.id, to: sponsoredUser, succeeded: false, clock: clock})
                     return res.status(200).send({paymentSecret: paymentIntent.client_secret,
                         chargesEnabled: stripeAccount.charges_enabled,
                         detailsSubmitted: stripeAccount.details_submitted
@@ -100,8 +101,10 @@ stripeRouterPublic.post("/stripe/webhook/sponsor-succeeded", bodyParser.raw({typ
 
     if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object;
-         logger.info("Payment Succeeded")
-         CRUD.patch("payment-intents", {intent: paymentIntent.id}, {succeeded: true})
+        logger.info("Payment Succeeded")
+        CRUD.patch("payment-intents", {intent: paymentIntent.id}, {succeeded: true})
+
+        axios.post("http://localhost:3000/validate_payment", {paymentIntent: paymentIntent.id})
         //handleSuccessfulPaymentIntent(paymentIntent);
     }
     res.json({received: true});

@@ -163,7 +163,8 @@ stripeRouterPrivate.post("/stripe/sponsor", async(req: Request, res: Response) =
                         },
                     });
                     //@ts-ignore
-                    CRUD.post("payment-intents", {appId:"p1-"+shortid.generate(), from:req.user!.appId, intent:paymentIntent.id, to: sponsored, succeeded: false, clock: clock, succeeded: false})
+                    CRUD.post("payment-intents", {appId:"pi-"+shortid.generate(), from:req.user!.appId, intent:paymentIntent.id, to: sponsored, succeeded: false, clock: clock, succeeded: false})
+                    
                     return res.status(200).send({paymentSecret: paymentIntent.client_secret,
                         chargesEnabled: stripeAccount.charges_enabled,
                         detailsSubmitted: stripeAccount.details_submitted
