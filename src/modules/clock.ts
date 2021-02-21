@@ -1,12 +1,11 @@
 import express, { Request, Response } from 'express';
-import nosql_crud, { get, getAll, post, getSpecific, deleteEntity, patch, appGetOne, postMany } from '../connections/nosql_crud' 
+import CRUD, { get, getAll, post, getSpecific, deleteEntity, patch, appGetOne, postMany } from '../connections/nosql_crud' 
 import schedule from "node-schedule"
 import shortid from "shortid"
 import redis from "../connections/redis"
-import CRUD from '../connections/nosql_crud' 
 import Comment from "../definitions/comment"
 import logger from '../utilities/logger';
-import { isOwner } from '../utilities/clock_utilities';
+import { isOwner, getClocksWithOwners } from '../utilities/clock_utilities';
 
 const clockRoute = express.Router()
 
@@ -57,8 +56,8 @@ const clockRoute = express.Router()
                 }
             ]
         })
-        console.log("Result ", result)
-        res.status(200).send(result)
+        let clocksWithOwners = await getClocksWithOwners(result)
+        res.status(200).send(clocksWithOwners)
      } catch (e) {
         res.status(500).send(e)
      }
@@ -79,8 +78,8 @@ clockRoute.get('/ungrouped/clock', async (req: Request, res: Response) => {
                 }
             ]
         })
-        console.log("Result ", result)
-        res.status(200).send(result)
+        let clocksWithOwners = await getClocksWithOwners(result)
+        res.status(200).send(clocksWithOwners)
     } catch (e) {
        res.status(500).send(e)
     }

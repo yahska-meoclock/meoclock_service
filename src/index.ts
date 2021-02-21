@@ -23,7 +23,7 @@ import schedule from "node-schedule"
 import CRUD from "./connections/nosql_crud"
 import logger from "./utilities/logger"
 
-var whitelist = ['https://www.meoclocks.com', 'https://meoclocks.com', 'http://localhost:9000', 'http://127.0.0.1:9000']
+var whitelist = ['https://www.meoclocks.com', 'https://meoclocks.com', 'http://localhost:8080', 'http://127.0.0.1:9000']
 var corsOptions = {
     origin: function (origin:string, callback:Function) {
       if (whitelist.indexOf(origin) !== -1) {
@@ -45,6 +45,18 @@ var cors = require('cors')
 const app = express();
 app.enable('strict routing')
 const port = process.env.SERVER_PORT;
+
+// app.use(function(req, res, next) {
+//   var whitelist = ['https://www.meoclocks.com', 'https://meoclocks.com', 'http://localhost:8080', 'http://127.0.0.1:9000']
+//   const origin = req.headers.origin;
+//   if (whitelist.includes(origin as string)) {
+//        res.setHeader('Access-Control-Allow-Origin', origin as string);
+//   }
+//   res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, PATCH, DELETE, OPTIONS');
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//   res.header('Access-Control-Allow-Credentials', "true");
+//   next();
+// });
 
 app.use(cors())
 
