@@ -82,7 +82,7 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             active: false
         }
         if(process.env.MODE=="production" && req.file){
-            logger.log("Uploading Profile Image")
+            logger.log("info", "Uploading Profile Image")
             const blobName = `pp-${userAppId}-${req.file.originalname}`
             const cloudFileName = `https://storage.googleapis.com/${bucket.name}/${blobName}`
             const blob = bucket.file(blobName)
