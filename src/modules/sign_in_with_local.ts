@@ -6,6 +6,7 @@ import CRUD, { patch } from "../connections/nosql_crud"
 import { generateHash, generateToken } from "../utils"
 import {Storage} from "@google-cloud/storage";
 import Multer from "multer";
+import logger from '../utilities/logger';
 const {format} = require('util');
 
 //@ts-ignore
@@ -81,6 +82,7 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             active: false
         }
         if(process.env.MODE=="production" && req.file){
+            logger.log("Uploading Profile Image")
             const blobName = `pp-${userAppId}-${req.file.originalname}`
             const cloudFileName = `https://storage.googleapis.com/${bucket.name}/${blobName}`
             const blob = bucket.file(blobName)
