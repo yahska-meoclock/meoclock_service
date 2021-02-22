@@ -7,6 +7,7 @@ import { generateHash, generateToken } from "../utils"
 import {Storage} from "@google-cloud/storage";
 import Multer from "multer";
 import logger from '../utilities/logger';
+import axios from 'axios';
 const {format} = require('util');
 
 //@ts-ignore
@@ -53,12 +54,23 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
     console.log("Signing Up")
     try{
         if(!req.body.username || !req.body.password) {
-            return res.status(500).send()
+            return res.status(400).send()
+        }
+        let isUsernameTaken = await redis.sismember("members", req.body.username)
+        if(isUsernameTaken) {
+            return res.status(400).send("Username not available")
         }
         let existing_user = await CRUD.getSpecific("users", {username: req.body.username})
         existing_user = existing_user[0]
         if(existing_user){
             return res.status(400).send("User alerady exists")
+        }
+        if (process.env.MODE=="production"){
+            const captchaToken = req.body.token
+            const captchaScore = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.CAPTCHA_SECRET_KEY}&response=${captchaToken}`);
+            if(captchaScore.data.score<0.5) {
+                return res.send(401).send()
+            }
         }
         let token = await generateToken(req.body.username)
         const userAppId = `u-${shortid.generate()}`
@@ -103,7 +115,7 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             });
             blobStream.end(req.file.buffer);
         }
-        
+        redis.sadd("members", req.body.username)
         CRUD.post("users", user)
         CRUD.post("followers", {appId: userAppId, followed: []})
         res.status(200).send(user)
@@ -112,6 +124,18 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
         console.log(e)
         res.status(500).send()
     }
+})
+
+localAuth.get("/is-available/:username?", async  (req: Request, res: Response)=>{
+    const {username} = req.params
+    if(username && username.length>0){
+        let isUsernameTaken = await redis.sismember("members", username)
+        if(isUsernameTaken) {
+            return res.status(200).send(false)
+        } else {
+            return res.status(200).send(true)
+        }
+    } 
 })
 
 localAuth.patch("/user/verification/:verificationCode",  async (req: Request, res: Response)=>{

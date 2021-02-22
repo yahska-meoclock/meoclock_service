@@ -7,6 +7,7 @@ import listEndpoints from 'express-list-endpoints'
 import bodyParser from 'body-parser'
 import morgan from 'morgan'
 import passport from 'passport';
+import redis from "./connections/redis"
 import { createJWTStrategy } from './modules/jwt-strategy';
 import {createGoogleAuthStrategy} from "./modules/google_auth_strategy"
 import localAuth from "./modules/sign_in_with_local"
