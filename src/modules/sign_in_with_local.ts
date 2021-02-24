@@ -68,6 +68,7 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
         if (process.env.MODE=="production"){
             const captchaToken = req.body.token
             const captchaScore = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.CAPTCHA_SECRET_KEY}&response=${captchaToken}`);
+            logger.log("info", "Bot Score for "+req.body.username+ " "+captchaScore)
             if(captchaScore.data.score<0.5) {
                 return res.send(401).send()
             }
