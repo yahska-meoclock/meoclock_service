@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 import CRUD, { post, patch, patchAddToSet, getAll, getSpecific } from '../connections/nosql_crud' 
+import redis from "../connections/redis"
+import logger from '../utilities/logger';
 
 const userRouter = express.Router()
 
@@ -11,16 +13,30 @@ interface PublicUserProfile {
     username: string
 }
 
+userRouter.get("/level", async (req: Request, res: Response) => {
+    try {
+        //@ts-ignore
+        const levelName = await redis.hget("level_names", req.user!.level || 1)
+        //@ts-ignore
+        const levelLimit = await redis.hget("level_limits", req.user!.level || 1)
+        res.status(200).send({levelName, levelLimit})
+    } catch(e) {
+        logger.log("error", "Cannot fet user level info")
+        res.status(500).send("Cannot fet user level info")
+    }
+})
+
 userRouter.get("/user/self", async (req: Request, res: Response)=>{
     //@ts-ignore
-    const {appId, firstName, lastName, pictureUrl, username, token} = req.user 
+    const {appId, firstName, lastName, pictureUrl, username, token, level} = req.user 
     res.status(200).json({user:{
         appId,
         firstName,
         lastName,
         pictureUrl,
         username,
-        token
+        token,
+        level
     }})
 })
 

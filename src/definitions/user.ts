@@ -1,7 +1,7 @@
-
+import shortid from "shortid"
 export class User {
     id:string|null=""
-    appId:string=""
+    appId:string=`u-${shortid.generate()}`
     firstName:string = ""
     lastName:string = ""
     token:string|null = null
@@ -16,6 +16,7 @@ export class User {
     signupEmail:string|null = ""
     pictureUrl: string|null = ""
     active: boolean = false
+    level: number = 1
 }
 
 export default User

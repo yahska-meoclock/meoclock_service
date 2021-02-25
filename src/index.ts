@@ -149,6 +149,21 @@ try {
   listEndpoints(app).forEach((e)=>console.log(e))
   console.log("Startup expiring clock")
   expireClocks()
+  redis.hset("level_names", "1", "Novice")
+  redis.hset("level_names", "2", "Tinkerer")
+  redis.hset("level_names", "3", "Hustler")
+  redis.hset("level_names", "4", "OverAchiever")
+  redis.hset("level_names", "5", "10x'er")
+  redis.hset("level_names", "6", "Juggernaut")
+  redis.hset("level_names", "7", "Stunt Person")
+
+  redis.hset("level_limits", "1", "30")
+  redis.hset("level_limits", "2", "100")
+  redis.hset("level_limits", "3", "200")
+  redis.hset("level_limits", "4", "500")
+  redis.hset("level_limits", "5", "1000")
+  redis.hset("level_limits", "6", "10000")
+  redis.hset("level_limits", "7", "10000000")
 } catch(e) {
   logger.error(e)
 }

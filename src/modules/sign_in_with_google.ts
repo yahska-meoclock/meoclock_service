@@ -121,24 +121,7 @@ googleAuth.get('/google/redirect', async function(req, res) {
     let userAppId: string|undefined = undefined
     if (existingUser.length==0){
       const userAppId = `u-${shortid.generate()}`
-      user = {
-        id: null,
-        appId: userAppId,
-        username: userinfo.email,
-        passwordHash: "",
-        token: null,
-        firstName: userinfo.given_name,
-        lastName: userinfo.family_name,
-        googleEmail: userinfo.email,
-        appleEmail: null,
-        appleAccessToken: null,
-        googleAccessToken: tokens.access_token,
-        appleRefreshToken: null,
-        googleRefreshToken: tokens.refresh_token,
-        signupEmail: req.body.signupEmail,
-        pictureUrl: userinfo.picture,
-        active: true
-      }
+      user = new User()
       CRUD.post("users", user)
       CRUD.post("followers", {appId: userAppId, followed: []})
     }else {

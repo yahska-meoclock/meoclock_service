@@ -41,7 +41,7 @@ localAuth.post("/try-login", async (req: Request, res: Response)=>{
         }
         let token = await generateToken(username)
         res.status(200).json({
-            user: {firstName: user.firstName, lastName: user.lastName, pictureUrl: user.pictureUrl, appId: user.appId, username: user.username},
+            user: {firstName: user.firstName, lastName: user.lastName, pictureUrl: user.pictureUrl, appId: user.appId, username: user.username, level: user.level},
             token:token
         })
     }catch(e){
@@ -92,7 +92,8 @@ localAuth.post("/signup", multer.single('file'), async (req: Request, res: Respo
             googleRefreshToken: null,
             signupEmail: req.body.signupEmail,
             pictureUrl: null,
-            active: false
+            active: false,
+            level: 1
         }
         if(process.env.MODE=="production" && req.file){
             logger.log("info", "Uploading Profile Image")

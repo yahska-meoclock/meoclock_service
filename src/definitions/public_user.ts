@@ -11,7 +11,7 @@ export class PublicUser {
     googleAccessToken:string|null = null
     googleRefreshToken:string|null = null
     username:string = ""
-
+    level: number = 1
 }
 
 export default PublicUser

@@ -94,24 +94,7 @@ appleAuthRoute.post("/apple/redirect", async (req: Request, res: Response)=>{
         })
     })
 
-    const user:User = {
-        id: null,
-        appId: `u-${shortid.generate()}`,
-        username: verificationResult.sub,
-        passwordHash: "",
-        token: null,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        googleEmail: null,
-        appleEmail: null,
-        appleAccessToken: null,
-        googleAccessToken: null,
-        appleRefreshToken: null,
-        googleRefreshToken: null,
-        signupEmail: req.body.signupEmail,
-        pictureUrl: null,
-        active: true
-    }
+    const user:User = new User()
 
     CRUD.post("users", user)
     const token = await generateToken(verificationResult.sub)
