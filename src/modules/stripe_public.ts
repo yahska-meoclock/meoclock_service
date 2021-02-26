@@ -104,7 +104,7 @@ stripeRouterPublic.post("/stripe/webhook/sponsor-succeeded", bodyParser.raw({typ
         logger.info("Payment Succeeded")
         CRUD.patch("payment-intents", {intent: paymentIntent.id}, {succeeded: true})
 
-        axios.post("http://localhost:3000/validate_payment", {paymentIntent: paymentIntent.id})
+        axios.post(`${process.env.PAYMENT_VALIDATION_ENDPOINT}/validate_payment`, {paymentIntent: paymentIntent.id})
         //handleSuccessfulPaymentIntent(paymentIntent);
     }
     res.json({received: true});
